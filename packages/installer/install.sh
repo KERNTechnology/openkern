@@ -4,12 +4,22 @@ set -euo pipefail
 # =============================================================================
 # OpenKERN Installer
 # Deploys a Payload CMS website on your AWS account.
-# https://openkern.dev
+# https://openkern.org
 # =============================================================================
 
 VERSION="0.1.0"
 OPENKERN_REPO="https://github.com/kern-technology/openkern"
 KERN_API_URL="https://api.openkern.org"
+LOCAL_REPO=""
+
+# Parse global flags (before any subcommand)
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --local) LOCAL_REPO="$(cd "$2" && pwd)"; shift 2 ;;
+    --api-url) KERN_API_URL="$2"; shift 2 ;;
+    *) break ;;
+  esac
+done
 
 # Colors
 RED='\033[0;31m'
@@ -332,9 +342,7 @@ deploy() {
   PAYLOAD_SECRET_KEY=$(openssl rand -hex 32)
   local DATABASE_URI="postgresql://${KERN_DB_USER}:${KERN_DB_PASSWORD}@${KERN_DB_HOST}:${KERN_DB_PORT}/${KERN_DB_NAME}?sslmode=require"
 
-  # 1. Clone repo and set up project
-  log_info "Cloning OpenKERN repository..."
-
+  # 1. Set up project directory
   local WORK_DIR
   WORK_DIR="$(pwd)/$PROJECT_NAME"
   if [[ -d "$WORK_DIR" ]]; then
@@ -342,7 +350,14 @@ deploy() {
     exit 1
   fi
 
-  git clone --depth 1 "$OPENKERN_REPO" "$PROJECT_NAME"
+  if [[ -n "$LOCAL_REPO" ]]; then
+    log_info "Using local repo: $LOCAL_REPO"
+    cp -r "$LOCAL_REPO" "$WORK_DIR"
+    rm -rf "$WORK_DIR/.git"
+  else
+    log_info "Cloning OpenKERN repository..."
+    git clone --depth 1 "$OPENKERN_REPO" "$PROJECT_NAME"
+  fi
   cd "$WORK_DIR"
 
   log_info "Scaffolding from template: $TEMPLATE"

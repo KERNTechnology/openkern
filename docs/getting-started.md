@@ -14,7 +14,7 @@ OpenKERN deploys a Payload CMS website on your AWS account. The Starter tier use
 ## Installation
 
 ```bash
-curl -fsSL https://openkern.org/install.sh | bash
+curl -fsSL https://install.openkern.org/install.sh | bash
 ```
 
 The installer will:

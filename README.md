@@ -109,7 +109,7 @@ Custom infrastructure, dedicated support, SLAs.
 # 1. Register at kern.technology to receive your database credentials
 
 # 2. Run the installer
-curl -fsSL https://openkern.dev/install.sh | bash
+curl -fsSL https://install.openkern.org/install.sh | bash
 
 # 3. Follow the prompts:
 #    - Enter your KERN API key and DB credentials
