@@ -14,7 +14,21 @@ OpenKERN deploys a Payload CMS website on your AWS account. The Starter tier use
 ## Installation
 
 ```bash
-curl -fsSL https://install.openkern.org/install.sh | bash
+# Verified install (recommended) — downloads, verifies SHA-256 checksum, then runs
+curl -fsSL https://install.openkern.org/verify-and-install.sh | bash
+```
+
+Or manually verify before running:
+
+```bash
+# Download
+curl -fsSL https://install.openkern.org/install.sh -o install.sh
+
+# Verify checksum against https://install.openkern.org/checksums.txt
+curl -fsSL https://install.openkern.org/checksums.txt | grep install.sh | shasum -a 256 -c
+
+# Run
+bash install.sh
 ```
 
 The installer will:
