@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:open-next": "npx open-next build",
     "start": "next start",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "payload generate:types",
@@ -17,6 +18,7 @@
     "@payloadcms/db-postgres": "^3.0.0",
     "@payloadcms/richtext-lexical": "^3.0.0",
     "@payloadcms/storage-s3": "^3.0.0",
+    "@opennextjs/aws": "^3.0.0",
     "@payloadcms/plugin-seo": "^3.0.0",
     "@payloadcms/ui": "^3.0.0",
     "next": "^15.0.0",

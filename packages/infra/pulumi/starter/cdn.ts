@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { assetsBucket, mediaBucket, oai } from "./storage";
-import { functionUrl } from "./compute";
+import { functionUrl, imageFunctionUrl } from "./compute";
 
 const config = new pulumi.Config("openkern");
 const projectName = config.require("projectName");
@@ -13,8 +13,13 @@ const tags = {
   ManagedBy: "pulumi",
 };
 
-// Extract the Lambda function URL hostname (strip protocol and trailing slash)
+// Extract Lambda function URL hostnames (strip protocol and trailing slash)
 const lambdaOriginDomain = functionUrl.apply((url) => {
+  const parsed = new URL(url);
+  return parsed.hostname;
+});
+
+const imageOriginDomain = imageFunctionUrl.apply((url) => {
   const parsed = new URL(url);
   return parsed.hostname;
 });
@@ -51,7 +56,7 @@ export const distribution = new aws.cloudfront.Distribution(
       originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac", // AllViewerExceptHostHeader
     },
 
-    // Static assets from S3 (_next/static/*)
+    // Static assets, image optimization, and media from S3
     orderedCacheBehaviors: [
       {
         pathPattern: "/_next/static/*",
@@ -61,6 +66,16 @@ export const distribution = new aws.cloudfront.Distribution(
         cachedMethods: ["GET", "HEAD"],
         compress: true,
         cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6", // CachingOptimized
+      },
+      {
+        pathPattern: "/_next/image",
+        targetOriginId: "image-optimization",
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: ["GET", "HEAD"],
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6", // CachingOptimized
+        originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac", // AllViewerExceptHostHeader
       },
       {
         pathPattern: "/media/*",
@@ -78,6 +93,16 @@ export const distribution = new aws.cloudfront.Distribution(
       {
         originId: "lambda",
         domainName: lambdaOriginDomain,
+        customOriginConfig: {
+          httpPort: 80,
+          httpsPort: 443,
+          originProtocolPolicy: "https-only",
+          originSslProtocols: ["TLSv1.2"],
+        },
+      },
+      {
+        originId: "image-optimization",
+        domainName: imageOriginDomain,
         customOriginConfig: {
           httpPort: 80,
           httpsPort: 443,
