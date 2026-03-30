@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Pulumi
+.pulumi/
+
+# Environment
+.env
+.env.*
+
+# Secrets
+*.pem
+*.key
+credentials.json
+
+# Build output
+dist/
+.next/
+.open-next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
