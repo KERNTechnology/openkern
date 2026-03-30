@@ -1,0 +1,3 @@
+name: openkern-starter
+runtime: nodejs
+description: OpenKERN Starter infrastructure — Lambda + S3 + CloudFront (no VPC, no database)
