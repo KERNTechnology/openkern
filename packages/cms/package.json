@@ -1,0 +1,40 @@
+{
+  "name": "openkern-cms",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap"
+  },
+  "dependencies": {
+    "payload": "^3.0.0",
+    "@payloadcms/next": "^3.0.0",
+    "@payloadcms/db-postgres": "^3.0.0",
+    "@payloadcms/richtext-lexical": "^3.0.0",
+    "@payloadcms/storage-s3": "^3.0.0",
+    "@payloadcms/plugin-seo": "^3.0.0",
+    "@payloadcms/ui": "^3.0.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "graphql": "^16.8.0",
+    "sharp": "^0.33.0",
+    "cross-env": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
