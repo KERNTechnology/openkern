@@ -14,7 +14,7 @@ OpenKERN deploys a Payload CMS website on your AWS account. The Starter tier use
 ## Installation
 
 ```bash
-curl -fsSL https://openkern.dev/install.sh | bash
+curl -fsSL https://openkern.org/install.sh | bash
 ```
 
 The installer will:
@@ -22,8 +22,10 @@ The installer will:
 2. Ask for your KERN database credentials
 3. Ask for project name, AWS region, and template choice
 4. Deploy Lambda + S3 + CloudFront on your AWS account
-5. Run Payload CMS database migration
-6. Output your site URL and admin panel URL
+5. Assign a random subdomain (`<random>.openkern.org`)
+6. Build and deploy via OpenNext (Next.js → Lambda)
+7. Create your admin account
+8. Output your site URL and admin panel URL
 
 ## After Installation
 
@@ -31,14 +33,28 @@ The installer will:
 - Add pages, posts, and media through the visual editor
 - Your site auto-updates when you publish content
 
-## Custom Domain
+## Domains
 
-To use your own domain instead of the CloudFront URL:
+Every site gets a free subdomain: `<random>.openkern.org` (e.g. `a7f3x9bc.openkern.org`). This is assigned automatically during installation.
 
-1. Register your domain (or use an existing one)
-2. Create an ACM certificate in `us-east-1` (required for CloudFront)
-3. Run `openkern domain set yourdomain.com`
-4. Update your DNS to point to the CloudFront distribution
+### Custom Domain (Free)
+
+To use your own domain alongside the openkern.org subdomain:
+
+1. Create an ACM certificate for your domain in **us-east-1** (required by CloudFront)
+2. During installation, enter your domain and the ACM certificate ARN when prompted
+3. After deployment, point a CNAME from your domain to `<random>.openkern.org`
+
+You can also add a custom domain after installation by updating the Pulumi config:
+
+```bash
+cd packages/infra/pulumi/starter
+pulumi config set openkern:customDomain yourdomain.com
+pulumi config set openkern:customCertArn arn:aws:acm:us-east-1:123:certificate/abc
+pulumi up --yes
+```
+
+Then point your DNS CNAME to your `<random>.openkern.org` subdomain.
 
 ## Upgrading to Professional
 

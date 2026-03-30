@@ -9,6 +9,7 @@ set -euo pipefail
 
 VERSION="0.1.0"
 OPENKERN_REPO="https://github.com/kern-technology/openkern"
+KERN_API_URL="https://api.openkern.org"
 
 # Colors
 RED='\033[0;31m'
@@ -133,12 +134,50 @@ prompt_value() {
   fi
 }
 
-prompt_credentials() {
-  echo -e "${BOLD}KERN Database Credentials${NC}"
+prompt_kern_token() {
+  echo -e "${BOLD}KERN Authentication${NC}"
   echo "─────────────────────────────────────────────"
   echo ""
-  echo "To use OpenKERN Starter, you need database credentials from KERN."
+  echo "To use OpenKERN, you need an API token and database credentials from KERN."
   echo "Register at https://kern.technology/register or contact hello@kern.technology"
+  echo ""
+
+  read -r -s -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
+  echo ""
+
+  # Validate token by fetching KERN config
+  log_info "Validating API token..."
+  local config_response
+  config_response=$(curl -s -w "\n%{http_code}" \
+    -H "Authorization: Bearer $KERN_API_TOKEN" \
+    "${KERN_API_URL}/v1/config" 2>/dev/null) || true
+
+  local http_code
+  http_code=$(echo "$config_response" | tail -1)
+  local body
+  body=$(echo "$config_response" | sed '$d')
+
+  if [[ "$http_code" != "200" ]]; then
+    log_error "Invalid API token (HTTP $http_code). Get one at kern.technology"
+    exit 1
+  fi
+
+  # Parse KERN config (cert ARN and zone info)
+  KERN_WILDCARD_CERT_ARN=$(echo "$body" | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
+  KERN_REGION=$(echo "$body" | grep -o '"region":"[^"]*"' | cut -d'"' -f4)
+
+  if [[ -z "$KERN_WILDCARD_CERT_ARN" ]]; then
+    log_error "Could not parse KERN config. Contact KERN support."
+    exit 1
+  fi
+
+  log_ok "API token valid. KERN region: $KERN_REGION"
+  echo ""
+}
+
+prompt_credentials() {
+  echo -e "${BOLD}Database Credentials${NC}"
+  echo "─────────────────────────────────────────────"
   echo ""
 
   KERN_DB_HOST=$(prompt_value "Database host" "")
@@ -167,6 +206,11 @@ prompt_credentials() {
   echo ""
 }
 
+generate_subdomain() {
+  # Generate a random 8-character lowercase alphanumeric string
+  LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8
+}
+
 prompt_project() {
   echo -e "${BOLD}Project Configuration${NC}"
   echo "─────────────────────────────────────────────"
@@ -174,7 +218,45 @@ prompt_project() {
 
   PROJECT_NAME=$(prompt_value "Project name" "my-site")
   AWS_REGION=$(prompt_value "AWS region" "eu-central-1")
-  DOMAIN=$(prompt_value "Domain (leave empty to use CloudFront URL)" "")
+
+  # Generate random subdomain and check availability via KERN API
+  local attempts=0
+  while true; do
+    SUBDOMAIN=$(generate_subdomain)
+    local dns_check
+    dns_check=$(curl -s -H "Authorization: Bearer $KERN_API_TOKEN" \
+      "${KERN_API_URL}/v1/dns/${SUBDOMAIN}" 2>/dev/null) || true
+
+    local available
+    available=$(echo "$dns_check" | grep -o '"available":true' || true)
+
+    if [[ -n "$available" ]]; then
+      break
+    fi
+
+    attempts=$((attempts + 1))
+    if [[ $attempts -ge 3 ]]; then
+      log_error "Could not find an available subdomain after 3 attempts. Please try again."
+      exit 1
+    fi
+    log_info "Subdomain ${SUBDOMAIN} taken, generating another..."
+  done
+
+  log_info "Your site URL will be: https://${SUBDOMAIN}.openkern.org"
+  echo ""
+
+  # Optional custom domain (free — customer manages their own ACM cert)
+  CUSTOM_DOMAIN=$(prompt_value "Custom domain (optional, leave empty to skip)" "")
+  if [[ -n "$CUSTOM_DOMAIN" ]]; then
+    log_info "Custom domain: $CUSTOM_DOMAIN"
+    log_info "You will need to:"
+    log_info "  1. Create an ACM certificate for $CUSTOM_DOMAIN in us-east-1"
+    log_info "  2. Point a CNAME from $CUSTOM_DOMAIN to ${SUBDOMAIN}.openkern.org"
+    echo ""
+    CUSTOM_CERT_ARN=$(prompt_value "ACM certificate ARN (us-east-1)" "")
+  else
+    CUSTOM_CERT_ARN=""
+  fi
   echo ""
 
   echo "Template:"
@@ -218,7 +300,10 @@ confirm() {
   echo "  Project:     $PROJECT_NAME"
   echo "  Template:    $TEMPLATE"
   echo "  AWS Region:  $AWS_REGION"
-  echo "  Domain:      ${DOMAIN:-"(CloudFront default URL)"}"
+  echo "  Site URL:    https://${SUBDOMAIN}.openkern.org"
+  if [[ -n "$CUSTOM_DOMAIN" ]]; then
+    echo "  Custom:      https://$CUSTOM_DOMAIN"
+  fi
   echo "  Admin:       $ADMIN_EMAIL"
   echo "  DB Host:     $KERN_DB_HOST"
   echo "  DB Name:     $KERN_DB_NAME"
@@ -300,24 +385,51 @@ EOL
     pulumi stack select "$PROJECT_NAME" 2>/dev/null || true
 
   pulumi config set openkern:projectName "$PROJECT_NAME"
+  pulumi config set openkern:subdomain "$SUBDOMAIN"
+  pulumi config set openkern:wildcardCertArn "$KERN_WILDCARD_CERT_ARN"
   pulumi config set --secret openkern:databaseUri "$DATABASE_URI"
   pulumi config set --secret openkern:payloadSecret "$PAYLOAD_SECRET_KEY"
   pulumi config set aws:region "$AWS_REGION"
 
-  if [[ -n "$DOMAIN" ]]; then
-    pulumi config set openkern:domain "$DOMAIN"
+  if [[ -n "$CUSTOM_DOMAIN" ]]; then
+    pulumi config set openkern:customDomain "$CUSTOM_DOMAIN"
+  fi
+  if [[ -n "$CUSTOM_CERT_ARN" ]]; then
+    pulumi config set openkern:customCertArn "$CUSTOM_CERT_ARN"
   fi
 
   pulumi up --yes
 
   # Read outputs
-  local SITE_URL ADMIN_URL ASSETS_BUCKET S3_REGION_OUT
+  local SITE_URL ADMIN_URL ASSETS_BUCKET CF_DOMAIN
   SITE_URL=$(pulumi stack output siteUrl)
   ADMIN_URL=$(pulumi stack output adminUrl)
   ASSETS_BUCKET=$(pulumi stack output assetsBucketName)
-  S3_REGION_OUT=$(aws configure get region 2>/dev/null || echo "$AWS_REGION")
+  CF_DOMAIN=$(pulumi stack output distributionDomain)
 
   log_ok "Infrastructure deployed."
+
+  # Create DNS record via KERN Onboarding API
+  log_info "Creating DNS record: ${SUBDOMAIN}.openkern.org -> ${CF_DOMAIN}..."
+  local dns_response dns_http_code
+  dns_response=$(curl -s -w "\n%{http_code}" -X POST \
+    -H "Authorization: Bearer $KERN_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"subdomain\":\"${SUBDOMAIN}\",\"cloudfrontDomain\":\"${CF_DOMAIN}\"}" \
+    "${KERN_API_URL}/v1/dns" 2>/dev/null) || true
+
+  dns_http_code=$(echo "$dns_response" | tail -1)
+
+  if [[ "$dns_http_code" == "201" ]]; then
+    log_ok "DNS record created: ${SUBDOMAIN}.openkern.org"
+  elif [[ "$dns_http_code" == "409" ]]; then
+    log_warn "Subdomain ${SUBDOMAIN}.openkern.org already taken."
+    log_warn "Your site is still accessible via CloudFront: https://${CF_DOMAIN}"
+  else
+    log_warn "DNS creation failed (HTTP $dns_http_code). This is not critical."
+    log_warn "Your site is accessible via CloudFront: https://${CF_DOMAIN}"
+    log_warn "Contact KERN support to set up ${SUBDOMAIN}.openkern.org manually."
+  fi
 
   # 5. Update .env with actual S3 bucket
   cd "$WORK_DIR"
@@ -366,13 +478,13 @@ EOL
   echo "  Admin:       $ADMIN_URL"
   echo "  Email:       $ADMIN_EMAIL"
   echo ""
+  if [[ -n "$CUSTOM_DOMAIN" ]]; then
+    echo "  Custom domain: https://$CUSTOM_DOMAIN"
+    echo "  Point a CNAME from $CUSTOM_DOMAIN to ${SUBDOMAIN}.openkern.org"
+  fi
+  echo ""
   echo "  To redeploy after changes:"
   echo "    cd $WORK_DIR && bash packages/installer/deploy.sh"
-  echo ""
-  if [[ -n "$DOMAIN" ]]; then
-    echo "  Custom domain: $DOMAIN"
-    echo "  Point your DNS CNAME to the CloudFront distribution."
-  fi
   echo ""
   echo "─────────────────────────────────────────────"
 }
@@ -382,6 +494,7 @@ EOL
 main() {
   print_banner
   preflight
+  prompt_kern_token
   prompt_credentials
   prompt_project
   prompt_admin

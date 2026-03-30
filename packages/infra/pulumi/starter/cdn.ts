@@ -5,7 +5,16 @@ import { functionUrl, imageFunctionUrl } from "./compute";
 
 const config = new pulumi.Config("openkern");
 const projectName = config.require("projectName");
-const domain = config.get("domain") || "";
+
+// Every customer gets a subdomain like a7f3x.openkern.org (set by the installer).
+// The wildcard ACM cert for *.openkern.org lives in the KERN main account.
+const subdomain = config.require("subdomain"); // e.g. "a7f3x"
+const siteHost = `${subdomain}.openkern.org`;
+const wildcardCertArn = config.require("wildcardCertArn");
+
+// Optional custom domain (free) — customer manages their own ACM cert in their account.
+const customDomain = config.get("customDomain") || "";
+const customCertArn = config.get("customCertArn") || "";
 
 const tags = {
   Project: "openkern",
@@ -34,8 +43,8 @@ export const distribution = new aws.cloudfront.Distribution(
     defaultRootObject: "",
     priceClass: "PriceClass_100", // US + Europe (cheapest)
 
-    // Custom domain (optional)
-    aliases: domain ? [domain] : [],
+    // Aliases: always includes the openkern.org subdomain, plus optional custom domain
+    aliases: customDomain ? [siteHost, customDomain] : [siteHost],
 
     // Default behavior — routes to Lambda (Payload + Next.js SSR)
     defaultCacheBehavior: {
@@ -132,14 +141,20 @@ export const distribution = new aws.cloudfront.Distribution(
       },
     },
 
-    viewerCertificate: domain
+    // Use the KERN wildcard cert (*.openkern.org) by default.
+    // If a custom domain is configured with its own cert, use that instead
+    // (the custom cert must also cover the openkern.org subdomain as a SAN,
+    // or the customer accepts that only their custom domain uses HTTPS with their cert).
+    viewerCertificate: customCertArn
       ? {
-          acmCertificateArn: config.get("certificateArn") || "",
+          acmCertificateArn: customCertArn,
           sslSupportMethod: "sni-only",
           minimumProtocolVersion: "TLSv1.2_2021",
         }
       : {
-          cloudfrontDefaultCertificate: true,
+          acmCertificateArn: wildcardCertArn,
+          sslSupportMethod: "sni-only",
+          minimumProtocolVersion: "TLSv1.2_2021",
         },
 
     tags: { ...tags, Name: `${projectName}-cdn` },
@@ -148,6 +163,7 @@ export const distribution = new aws.cloudfront.Distribution(
 
 export const distributionId = distribution.id;
 export const distributionDomain = distribution.domainName;
-export const siteUrl = domain
-  ? pulumi.interpolate`https://${domain}`
-  : pulumi.interpolate`https://${distribution.domainName}`;
+export const siteUrl = pulumi.interpolate`https://${siteHost}`;
+export const customSiteUrl = customDomain
+  ? pulumi.interpolate`https://${customDomain}`
+  : pulumi.output("");
