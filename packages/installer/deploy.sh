@@ -80,6 +80,21 @@ fi
 
 success "OpenNext build complete."
 
+# ── Step 2b: Add sharp linux-x64 binaries to server function ─────────────────
+# Lambda runs on linux-x64, but local dev may be macOS/arm64. We download the
+# correct native binaries and inject them into the OpenNext build output.
+info "Adding sharp linux-x64 binaries..."
+SERVER_NM="$OPEN_NEXT_DIR/server-functions/default/node_modules"
+mkdir -p "$SERVER_NM/@img"
+cp -r "$CMS_DIR/node_modules/sharp" "$SERVER_NM/sharp" 2>/dev/null || true
+# Remove non-linux platform binaries
+rm -rf "$SERVER_NM/@img/sharp-darwin-"* "$SERVER_NM/@img/sharp-libvips-darwin-"* \
+       "$SERVER_NM/@img/sharp-linux-arm64" "$SERVER_NM/@img/sharp-libvips-linux-arm64"
+# Download linux-x64 binaries
+(cd /tmp && curl -sL https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.34.5.tgz | tar xz && mv package "$SERVER_NM/@img/sharp-linux-x64")
+(cd /tmp && curl -sL https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.2.4.tgz | tar xz && mv package "$SERVER_NM/@img/sharp-libvips-linux-x64")
+success "Sharp binaries added."
+
 # ── Step 3: Upload static assets to S3 ───────────────────────────────────────
 info "Uploading static assets to S3..."
 

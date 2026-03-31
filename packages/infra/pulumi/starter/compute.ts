@@ -73,6 +73,8 @@ export const serverFunction = new aws.lambda.Function(
         PAYLOAD_SECRET: payloadSecret,
         S3_BUCKET: mediaBucket.bucket,
         S3_REGION: aws.config.region || "eu-central-1",
+        CACHE_BUCKET_NAME: mediaBucket.bucket,
+        CACHE_BUCKET_REGION: aws.config.region || "eu-central-1",
         NODE_ENV: "production",
       },
     },
@@ -82,15 +84,6 @@ export const serverFunction = new aws.lambda.Function(
         'exports.handler = async () => ({ statusCode: 200, body: "OpenKERN: awaiting deployment" });',
       ),
     }),
-  },
-);
-
-// Lambda function URL (used by CloudFront as origin)
-export const functionUrl = new aws.lambda.FunctionUrl(
-  `${projectName}-server-url`,
-  {
-    functionName: serverFunction.name,
-    authorizationType: "NONE",
   },
 );
 
@@ -154,15 +147,78 @@ export const imageFunction = new aws.lambda.Function(
   },
 );
 
-export const imageFunctionUrl = new aws.lambda.FunctionUrl(
-  `${projectName}-image-url`,
+// --- HTTP API (API Gateway v2) as proxy to Lambda ---
+// Used as CloudFront origin instead of Function URLs (SCP-compatible).
+const api = new aws.apigatewayv2.Api(`${projectName}-api`, {
+  protocolType: "HTTP",
+  tags,
+});
+
+// Server Lambda integration
+const serverIntegration = new aws.apigatewayv2.Integration(
+  `${projectName}-server-integration`,
   {
-    functionName: imageFunction.name,
-    authorizationType: "NONE",
+    apiId: api.id,
+    integrationType: "AWS_PROXY",
+    integrationUri: serverFunction.arn,
+    integrationMethod: "POST",
+    payloadFormatVersion: "2.0",
   },
 );
 
+// Image Lambda integration
+const imageIntegration = new aws.apigatewayv2.Integration(
+  `${projectName}-image-integration`,
+  {
+    apiId: api.id,
+    integrationType: "AWS_PROXY",
+    integrationUri: imageFunction.arn,
+    integrationMethod: "POST",
+    payloadFormatVersion: "2.0",
+  },
+);
+
+// Route: /_next/image → image optimization Lambda
+new aws.apigatewayv2.Route(`${projectName}-image-route`, {
+  apiId: api.id,
+  routeKey: "GET /_next/image",
+  target: pulumi.interpolate`integrations/${imageIntegration.id}`,
+});
+
+// Route: everything else → server Lambda (catch-all)
+new aws.apigatewayv2.Route(`${projectName}-default-route`, {
+  apiId: api.id,
+  routeKey: "$default",
+  target: pulumi.interpolate`integrations/${serverIntegration.id}`,
+});
+
+// Auto-deploy stage
+const stage = new aws.apigatewayv2.Stage(`${projectName}-api-stage`, {
+  apiId: api.id,
+  name: "$default",
+  autoDeploy: true,
+  tags,
+});
+
+// Allow API Gateway to invoke the server Lambda
+new aws.lambda.Permission(`${projectName}-apigw-invoke-server`, {
+  action: "lambda:InvokeFunction",
+  function: serverFunction.name,
+  principal: "apigateway.amazonaws.com",
+  sourceArn: pulumi.interpolate`${api.executionArn}/*/*`,
+});
+
+// Allow API Gateway to invoke the image Lambda
+new aws.lambda.Permission(`${projectName}-apigw-invoke-image`, {
+  action: "lambda:InvokeFunction",
+  function: imageFunction.name,
+  principal: "apigateway.amazonaws.com",
+  sourceArn: pulumi.interpolate`${api.executionArn}/*/*`,
+});
+
+// Exports
 export const lambdaFunctionName = serverFunction.name;
-export const lambdaFunctionUrl = functionUrl.functionUrl;
 export const imageFunctionName = imageFunction.name;
-export const imageLambdaUrl = imageFunctionUrl.functionUrl;
+
+// API Gateway URL as the origin for CloudFront
+export const apiUrl = pulumi.interpolate`${api.apiEndpoint}/`;
