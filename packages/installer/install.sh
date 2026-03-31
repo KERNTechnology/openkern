@@ -211,10 +211,9 @@ prompt_kern_token() {
 
   # Parse credentials and config from response
   KERN_DATABASE_URI=$(echo "$body" | grep -o '"databaseUri":"[^"]*"' | cut -d'"' -f4)
-  KERN_WILDCARD_CERT_ARN=$(echo "$body" | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
   KERN_REGION=$(echo "$body" | grep -o '"region":"[^"]*"' | cut -d'"' -f4)
 
-  if [[ -z "$KERN_DATABASE_URI" || -z "$KERN_WILDCARD_CERT_ARN" ]]; then
+  if [[ -z "$KERN_DATABASE_URI" ]]; then
     log_error "Could not parse KERN credentials. Contact hello@kern.technology"
     exit 1
   fi
@@ -235,45 +234,6 @@ prompt_project() {
 
   PROJECT_NAME=$(prompt_value "Project name" "my-site")
   AWS_REGION=$(prompt_value "AWS region" "eu-central-1")
-
-  # Generate random subdomain and check availability via KERN API
-  local attempts=0
-  while true; do
-    SUBDOMAIN=$(generate_subdomain)
-    local dns_check
-    dns_check=$(curl -s --max-time 10 -H "Authorization: Bearer $KERN_API_TOKEN" \
-      "${KERN_API_URL}/v1/dns/${SUBDOMAIN}" 2>/dev/null) || true
-
-    local available
-    available=$(echo "$dns_check" | grep -o '"available"[[:space:]]*:[[:space:]]*true' || true)
-
-    if [[ -n "$available" ]]; then
-      break
-    fi
-
-    attempts=$((attempts + 1))
-    if [[ $attempts -ge 3 ]]; then
-      log_error "Could not find an available subdomain after 3 attempts. Please try again."
-      exit 1
-    fi
-    log_info "Subdomain ${SUBDOMAIN} taken, generating another..."
-  done
-
-  log_info "Your site URL will be: https://${SUBDOMAIN}.openkern.org"
-  echo ""
-
-  # Optional custom domain (free — customer manages their own ACM cert)
-  CUSTOM_DOMAIN=$(prompt_value "Custom domain (optional, leave empty to skip)" "")
-  if [[ -n "$CUSTOM_DOMAIN" ]]; then
-    log_info "Custom domain: $CUSTOM_DOMAIN"
-    log_info "You will need to:"
-    log_info "  1. Create an ACM certificate for $CUSTOM_DOMAIN in us-east-1"
-    log_info "  2. Point a CNAME from $CUSTOM_DOMAIN to ${SUBDOMAIN}.openkern.org"
-    echo ""
-    CUSTOM_CERT_ARN=$(prompt_value "ACM certificate ARN (us-east-1)" "")
-  else
-    CUSTOM_CERT_ARN=""
-  fi
   echo ""
 
   echo "Template:"
@@ -405,18 +365,9 @@ EOL
     pulumi stack select "$PROJECT_NAME" 2>/dev/null || true
 
   pulumi config set openkern:projectName "$PROJECT_NAME"
-  pulumi config set openkern:subdomain "$SUBDOMAIN"
-  pulumi config set openkern:wildcardCertArn "$KERN_WILDCARD_CERT_ARN"
   pulumi config set --secret openkern:databaseUri "$DATABASE_URI"
   pulumi config set --secret openkern:payloadSecret "$PAYLOAD_SECRET_KEY"
   pulumi config set aws:region "$AWS_REGION"
-
-  if [[ -n "$CUSTOM_DOMAIN" ]]; then
-    pulumi config set openkern:customDomain "$CUSTOM_DOMAIN"
-  fi
-  if [[ -n "$CUSTOM_CERT_ARN" ]]; then
-    pulumi config set openkern:customCertArn "$CUSTOM_CERT_ARN"
-  fi
 
   pulumi up --yes
 
@@ -428,28 +379,7 @@ EOL
   CF_DOMAIN=$(pulumi stack output distributionDomain)
 
   log_ok "Infrastructure deployed."
-
-  # Create DNS record via KERN Onboarding API
-  log_info "Creating DNS record: ${SUBDOMAIN}.openkern.org -> ${CF_DOMAIN}..."
-  local dns_response dns_http_code
-  dns_response=$(curl -s -w "\n%{http_code}" -X POST \
-    -H "Authorization: Bearer $KERN_API_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"subdomain\":\"${SUBDOMAIN}\",\"cloudfrontDomain\":\"${CF_DOMAIN}\"}" \
-    "${KERN_API_URL}/v1/dns" 2>/dev/null) || true
-
-  dns_http_code=$(echo "$dns_response" | tail -1)
-
-  if [[ "$dns_http_code" == "201" ]]; then
-    log_ok "DNS record created: ${SUBDOMAIN}.openkern.org"
-  elif [[ "$dns_http_code" == "409" ]]; then
-    log_warn "Subdomain ${SUBDOMAIN}.openkern.org already taken."
-    log_warn "Your site is still accessible via CloudFront: https://${CF_DOMAIN}"
-  else
-    log_warn "DNS creation failed (HTTP $dns_http_code). This is not critical."
-    log_warn "Your site is accessible via CloudFront: https://${CF_DOMAIN}"
-    log_warn "Contact KERN support to set up ${SUBDOMAIN}.openkern.org manually."
-  fi
+  log_info "Your site will be available at: https://${CF_DOMAIN}"
 
   # 5. Update .env with actual S3 bucket
   cd "$WORK_DIR"
