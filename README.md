@@ -1,10 +1,10 @@
 # OpenKERN
 
-**Self-installable, AWS-native web publishing stack powered by Payload CMS.**
+**Standardized AWS stack for KERN client projects.**
 
-Deploy a modern website on your own AWS account in under 10 minutes. No DevOps expertise required.
+OpenKERN deploys a modern web publishing stack (Payload CMS + Next.js) on your AWS account. It's the technical tool behind [kern.technology](https://www.kern.technology) — designed for tech leads who need to roll out the KERN stack on their infrastructure.
 
-OpenKERN is built for **content publishing** — marketing sites, agency projects, blogs, landing pages. It is not designed for sensitive data, financial systems, or mission-critical applications.
+**Sent here by KERN?** [Register for your API token](https://install.openkern.org/register.html) and deploy in under 30 minutes.
 
 ---
 
@@ -17,11 +17,39 @@ OpenKERN is built for **content publishing** — marketing sites, agency project
 
 ---
 
+## Quick Start
+
+### Prerequisites
+
+- AWS account with CLI configured (`aws configure`)
+- Node.js >= 20
+- Pulumi CLI (`curl -fsSL https://get.pulumi.com | sh`)
+
+### Install
+
+```bash
+# 1. Register at install.openkern.org to get your API token
+
+# 2. Run the installer
+curl -fsSL https://install.openkern.org/install.sh | bash
+
+# 3. Follow the prompts:
+#    - Enter your API token
+#    - Choose a project name and AWS region
+#    - Pick a template (agency / landing)
+
+# 4. Done. Your site is live.
+```
+
+The installer deploys Lambda + S3 + CloudFront on your AWS account and connects to the KERN managed database. No VPC, no NAT gateway, no database setup required.
+
+---
+
 ## Tiers
 
 ### Starter (Free)
 
-The fastest way to get started. Perfect for personal projects, prototypes, dev environments, and small websites.
+The default for new KERN client projects.
 
 ```
 Your AWS Account                          KERN (managed)
@@ -33,24 +61,22 @@ Your AWS Account                          KERN (managed)
 ```
 
 **How it works:**
-- You deploy Lambda + S3 + CloudFront on your own AWS account
+- You deploy Lambda + S3 + CloudFront on your AWS account
 - Your database runs on KERN's managed Aurora instance (isolated per customer)
 - Your AWS costs: **~$0-5/month** (Lambda and CloudFront free tiers)
 
 **What this means:**
-- Your CMS content (pages, posts, media metadata) is stored on KERN's database
+- Your CMS content (pages, posts, media metadata) is stored on KERN's managed database
 - Your media files (images, documents) are stored on your own S3
 - The database is for **publishing content only** — no passwords, no user data, no PII
 - Each customer gets a fully isolated PostgreSQL database with dedicated credentials
 - All connections are SSL-encrypted
 
-**Best for:** personal sites, small agency projects, prototypes, development environments
-
 ---
 
 ### Professional
 
-Full control. Your own database on your own AWS account. No shared infrastructure.
+Full control. Your own database on your own AWS account.
 
 ```
 Your AWS Account
@@ -68,58 +94,15 @@ Your AWS Account
 - Aurora Serverless v2 with dedicated instance (scales with demand)
 - Optional: ECS Fargate instead of Lambda for always-warm compute
 
-**What this means:**
-- Full data sovereignty — nothing leaves your AWS account
-- You manage your own database (backups, scaling, access)
-- Higher baseline cost, but no external dependencies
-
 **Your AWS costs:** ~$75+/month (Aurora ~$43, NAT Gateway ~$32, compute varies)
 
-**Best for:** production websites, client projects with SLAs, regulated industries, agencies that need full control
-
-**Upgrade path:** migrate from Starter to Professional at any time with `openkern upgrade` (zero data loss, automated via pg_dump/pg_restore)
+**Upgrade path:** `openkern upgrade` migrates from Starter to Professional (zero data loss, automated via pg_dump/pg_restore).
 
 ---
 
 ### Enterprise
 
-Custom infrastructure, dedicated support, SLAs.
-
-- Multi-region deployments
-- Custom compliance requirements (GDPR, SOC 2)
-- Dedicated Aurora instances with custom sizing
-- Priority support with guaranteed response times
-- Custom integrations and modules
-
-**Contact:** enterprise@kern.technology
-
----
-
-## Quick Start (Starter Tier)
-
-### Prerequisites
-
-- AWS account with CLI configured (`aws configure`)
-- Node.js >= 20
-- Pulumi CLI (`curl -fsSL https://get.pulumi.com | sh`)
-
-### Install
-
-```bash
-# 1. Register at kern.technology to receive your database credentials
-
-# 2. Run the installer
-curl -fsSL https://install.openkern.org/verify-and-install.sh | bash
-
-# 3. Follow the prompts:
-#    - Enter your KERN API key and DB credentials
-#    - Choose a project name and AWS region
-#    - Pick a template (agency / landing)
-
-# 4. Done! Your site is live.
-```
-
-The installer deploys Lambda + S3 + CloudFront on your AWS account and connects to the KERN managed database. No VPC, no NAT gateway, no database setup required.
+Custom infrastructure, dedicated support, SLAs. Contact: enterprise@kern.technology
 
 ---
 
@@ -177,77 +160,48 @@ openkern/
 
 ### CloudFront returns 403
 
-**Symptom:** Your site at `<subdomain>.openkern.org` shows a CloudFront 403 error, but the Lambda function works when invoked directly.
-
-**Cause:** The CloudFront distribution is missing the subdomain alias or the wildcard SSL certificate.
+**Symptom:** Your site at `<subdomain>.openkern.org` shows a CloudFront 403 error.
 
 **Fix:**
 ```bash
 cd packages/infra/pulumi/starter
-
-# Verify the cert ARN is set (should be an us-east-1 ARN)
 pulumi config get openkern:wildcardCertArn
 
-# If empty or missing, fetch it from the KERN API and set it:
+# If empty, fetch from KERN API:
 CERT_ARN=$(curl -s -H "Authorization: Bearer $YOUR_TOKEN" \
   https://api.openkern.org/v1/config | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
 pulumi config set openkern:wildcardCertArn "$CERT_ARN"
 pulumi up
 ```
 
-### InvalidViewerCertificate error during `pulumi up`
+### InvalidViewerCertificate error
 
-**Symptom:** `The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.`
+CloudFront requires certificates in `us-east-1`. Verify your cert ARN starts with `arn:aws:acm:us-east-1:`.
 
-**Cause:** The certificate ARN points to a cert outside `us-east-1`. CloudFront requires certificates in `us-east-1` regardless of where your stack is deployed.
+### Database connection warning during install
 
-**Fix:** Verify the cert ARN starts with `arn:aws:acm:us-east-1:`. If it doesn't, re-fetch it from the API (see above).
+Non-blocking. Your local machine can't reach the database directly — the Lambda function connects from AWS. If the site fails after deployment, verify your credentials.
 
-### Database connection fails during install
+### Site shows "awaiting deployment"
 
-**Symptom:** The installer warns `Could not connect to database` during setup.
-
-**Cause:** Your local machine may not be able to reach the database directly (IP restrictions, missing `psql` client, etc.). This is a non-blocking warning — the Lambda function connects from AWS, not from your machine.
-
-**Action:** If the site fails to load after deployment, verify your credentials are correct and that the KERN database allows connections from AWS Lambda (it should by default).
-
-### Lambda works but site shows "awaiting deployment"
-
-**Symptom:** The site returns `OpenKERN: awaiting deployment` instead of your content.
-
-**Cause:** The infrastructure was created but the application code hasn't been deployed yet. The Lambda starts with placeholder code.
-
-**Fix:** Run the deploy script:
+Infrastructure was created but app code not deployed yet. Run:
 ```bash
-cd packages/installer
-./deploy.sh
+cd packages/installer && ./deploy.sh
 ```
 
 ### Static assets return 404
 
-**Symptom:** Pages load but CSS/JS files under `/_next/static/*` return 404.
-
-**Cause:** Static assets weren't uploaded to S3 after the build.
-
-**Fix:** Re-run the deploy script, which uploads assets to S3 and invalidates the CloudFront cache:
+Re-run the deploy script to upload assets to S3 and invalidate CloudFront:
 ```bash
-cd packages/installer
-./deploy.sh
+cd packages/installer && ./deploy.sh
 ```
 
 ### DNS not resolving
 
-**Symptom:** `<subdomain>.openkern.org` doesn't resolve (NXDOMAIN).
-
-**Cause:** The DNS CNAME record wasn't created, or hasn't propagated yet.
-
-**Fix:**
 ```bash
-# Check if the record exists
 dig <subdomain>.openkern.org CNAME
 
-# If missing, the installer may have failed at the DNS step.
-# Re-create it manually:
+# If missing, re-create:
 CF_DOMAIN=$(cd packages/infra/pulumi/starter && pulumi stack output distributionDomain)
 curl -s -X POST -H "Authorization: Bearer $YOUR_TOKEN" \
   -H "Content-Type: application/json" \
@@ -255,37 +209,33 @@ curl -s -X POST -H "Authorization: Bearer $YOUR_TOKEN" \
   https://api.openkern.org/v1/dns
 ```
 
-DNS propagation typically takes 1-5 minutes.
-
 ### Need help?
 
-If your issue isn't listed here, contact **support@kern.technology** with:
-- Your project name and subdomain
-- The full error output from `pulumi up` or `deploy.sh`
-- Your AWS region
+Contact **support@kern.technology** with your project name, subdomain, error output, and AWS region.
 
 ---
 
 ## FAQ
 
-**Is my data safe on the Starter tier?**
-Your database on KERN's Aurora is fully isolated (own PostgreSQL database, own credentials, SSL-only). But remember: Starter is designed for publishing content — blog posts, pages, media. It is not intended for sensitive data. If you need full data sovereignty, use the Professional tier.
+**Who is this for?**
+Tech leads and developers at agencies that work with KERN. If your agency uses KERN for web projects, this is the tool to deploy the stack on your AWS.
+
+**Is my data safe on Starter?**
+Your database on KERN's Aurora is fully isolated (own PostgreSQL database, own credentials, SSL-only). Starter is for publishing content — blog posts, pages, media. For full data sovereignty, upgrade to Professional.
 
 **Can I migrate from Starter to Professional?**
-Yes. Run `openkern upgrade` — it provisions Aurora on your AWS account, migrates your data, and updates the configuration. Zero data loss.
+Yes. `openkern upgrade` provisions Aurora on your AWS, migrates data, updates config. Zero data loss.
 
-**What happens if KERN goes away?**
-Payload CMS is open source. Your code runs on your AWS account. The only dependency on KERN (Starter tier) is the database. Export it anytime with `pg_dump` and point Payload at your own PostgreSQL instance.
+**What if I need to leave KERN?**
+Everything is on your AWS account. The code is open source. Export the database with `pg_dump` and point Payload at your own PostgreSQL instance.
 
-**Why Pulumi and not Terraform?**
-Everything in the stack is TypeScript — Payload, Next.js, the installer. Pulumi lets you write infrastructure in TypeScript too. One language, one mental model. Terraform support is planned as a community option.
+**Why Pulumi?**
+The entire stack is TypeScript — Payload, Next.js, the installer. Pulumi keeps it that way. Terraform support is planned as a community option.
 
 ---
 
 ## License
 
-OpenKERN is licensed under the [Business Source License 1.1](LICENSE).
-
-Free for private use, agency projects, and non-commercial use. Commercial SaaS and hosting services require a commercial license. Converts to Apache 2.0 after four years.
+[Business Source License 1.1](LICENSE). Free for private and agency use. Commercial SaaS requires a license. Converts to Apache 2.0 after four years.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
