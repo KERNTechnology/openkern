@@ -173,6 +173,99 @@ openkern/
 
 ---
 
+## Troubleshooting
+
+### CloudFront returns 403
+
+**Symptom:** Your site at `<subdomain>.openkern.org` shows a CloudFront 403 error, but the Lambda function works when invoked directly.
+
+**Cause:** The CloudFront distribution is missing the subdomain alias or the wildcard SSL certificate.
+
+**Fix:**
+```bash
+cd packages/infra/pulumi/starter
+
+# Verify the cert ARN is set (should be an us-east-1 ARN)
+pulumi config get openkern:wildcardCertArn
+
+# If empty or missing, fetch it from the KERN API and set it:
+CERT_ARN=$(curl -s -H "Authorization: Bearer $YOUR_TOKEN" \
+  https://api.openkern.org/v1/config | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
+pulumi config set openkern:wildcardCertArn "$CERT_ARN"
+pulumi up
+```
+
+### InvalidViewerCertificate error during `pulumi up`
+
+**Symptom:** `The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.`
+
+**Cause:** The certificate ARN points to a cert outside `us-east-1`. CloudFront requires certificates in `us-east-1` regardless of where your stack is deployed.
+
+**Fix:** Verify the cert ARN starts with `arn:aws:acm:us-east-1:`. If it doesn't, re-fetch it from the API (see above).
+
+### Database connection fails during install
+
+**Symptom:** The installer warns `Could not connect to database` during setup.
+
+**Cause:** Your local machine may not be able to reach the database directly (IP restrictions, missing `psql` client, etc.). This is a non-blocking warning — the Lambda function connects from AWS, not from your machine.
+
+**Action:** If the site fails to load after deployment, verify your credentials are correct and that the KERN database allows connections from AWS Lambda (it should by default).
+
+### Lambda works but site shows "awaiting deployment"
+
+**Symptom:** The site returns `OpenKERN: awaiting deployment` instead of your content.
+
+**Cause:** The infrastructure was created but the application code hasn't been deployed yet. The Lambda starts with placeholder code.
+
+**Fix:** Run the deploy script:
+```bash
+cd packages/installer
+./deploy.sh
+```
+
+### Static assets return 404
+
+**Symptom:** Pages load but CSS/JS files under `/_next/static/*` return 404.
+
+**Cause:** Static assets weren't uploaded to S3 after the build.
+
+**Fix:** Re-run the deploy script, which uploads assets to S3 and invalidates the CloudFront cache:
+```bash
+cd packages/installer
+./deploy.sh
+```
+
+### DNS not resolving
+
+**Symptom:** `<subdomain>.openkern.org` doesn't resolve (NXDOMAIN).
+
+**Cause:** The DNS CNAME record wasn't created, or hasn't propagated yet.
+
+**Fix:**
+```bash
+# Check if the record exists
+dig <subdomain>.openkern.org CNAME
+
+# If missing, the installer may have failed at the DNS step.
+# Re-create it manually:
+CF_DOMAIN=$(cd packages/infra/pulumi/starter && pulumi stack output distributionDomain)
+curl -s -X POST -H "Authorization: Bearer $YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"subdomain\":\"<subdomain>\",\"cloudfrontDomain\":\"$CF_DOMAIN\"}" \
+  https://api.openkern.org/v1/dns
+```
+
+DNS propagation typically takes 1-5 minutes.
+
+### Need help?
+
+If your issue isn't listed here, contact **support@kern.technology** with:
+- Your project name and subdomain
+- The full error output from `pulumi up` or `deploy.sh`
+- Your AWS region
+
+---
+
 ## FAQ
 
 **Is my data safe on the Starter tier?**
