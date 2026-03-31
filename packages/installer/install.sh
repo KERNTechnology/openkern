@@ -148,16 +148,43 @@ prompt_kern_token() {
   echo -e "${BOLD}KERN Authentication${NC}"
   echo "─────────────────────────────────────────────"
   echo ""
-  echo "To use OpenKERN, you need an API token from KERN."
-  echo "Register at https://install.openkern.org/register.html"
-  echo ""
 
-  read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
-  echo ""
+  # Check if config was pre-stored in AWS Secrets Manager
+  local secret_value
+  secret_value=$(aws secretsmanager get-secret-value \
+    --secret-id openkern/config \
+    --query SecretString --output text 2>/dev/null) || true
 
+  if [[ -n "$secret_value" ]]; then
+    KERN_API_TOKEN=$(echo "$secret_value" | grep -o '"apiToken":"[^"]*"' | cut -d'"' -f4)
+
+    if [[ -n "$KERN_API_TOKEN" ]]; then
+      log_ok "Config found in AWS Secrets Manager (openkern/config)."
+      echo ""
+      echo "  The following was stored in your AWS account:"
+      echo "  - Secret name:  openkern/config"
+      echo "  - Contains:     Your KERN API token (encrypted at rest)"
+      echo "  - Stored by:    You, during registration"
+      echo "  - Cost:         ~\$0.40/month (AWS Secrets Manager)"
+      echo "  - Delete with:  aws secretsmanager delete-secret --secret-id openkern/config"
+      echo ""
+      log_info "Using API token from your Secrets Manager..."
+    fi
+  fi
+
+  # If no token found in Secrets Manager, prompt manually
   if [[ -z "$KERN_API_TOKEN" ]]; then
-    log_error "API token cannot be empty."
-    exit 1
+    echo "To use OpenKERN, you need an API token from KERN."
+    echo "Register at https://install.openkern.org/register.html"
+    echo ""
+
+    read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
+    echo ""
+
+    if [[ -z "$KERN_API_TOKEN" ]]; then
+      log_error "API token cannot be empty."
+      exit 1
+    fi
   fi
 
   # Validate token and fetch credentials + config in one call
