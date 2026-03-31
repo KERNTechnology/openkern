@@ -322,9 +322,7 @@ confirm() {
     echo "  Custom:      https://$CUSTOM_DOMAIN"
   fi
   echo "  Admin:       $ADMIN_EMAIL"
-  echo "  DB Host:     $KERN_DB_HOST"
-  echo "  DB Name:     $KERN_DB_NAME"
-  echo "  Tier:        Starter (KERN Managed DB)"
+  echo "  Database:    KERN Managed (automatic)"
   echo ""
 
   local proceed
