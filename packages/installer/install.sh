@@ -148,8 +148,8 @@ prompt_kern_token() {
   echo -e "${BOLD}KERN Authentication${NC}"
   echo "─────────────────────────────────────────────"
   echo ""
-  echo "To use OpenKERN, you need an API token and database credentials from KERN."
-  echo "Register at https://kern.technology/register or contact hello@kern.technology"
+  echo "To use OpenKERN, you need an API token from KERN."
+  echo "Register at https://install.openkern.org/register.html"
   echo ""
 
   read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
@@ -160,64 +160,35 @@ prompt_kern_token() {
     exit 1
   fi
 
-  # Validate token by fetching KERN config
-  log_info "Validating API token..."
-  local config_response
-  config_response=$(curl -s --max-time 10 -w "\n%{http_code}" \
+  # Validate token and fetch credentials + config in one call
+  log_info "Validating API token and fetching credentials..."
+  local creds_response
+  creds_response=$(curl -s --max-time 15 -w "\n%{http_code}" \
     -H "Authorization: Bearer $KERN_API_TOKEN" \
-    "${KERN_API_URL}/v1/config" 2>/dev/null) || true
+    "${KERN_API_URL}/v1/credentials" 2>/dev/null) || true
 
   local http_code
-  http_code=$(echo "$config_response" | tail -1)
+  http_code=$(echo "$creds_response" | tail -1)
   local body
-  body=$(echo "$config_response" | sed '$d')
+  body=$(echo "$creds_response" | sed '$d')
 
   if [[ "$http_code" != "200" ]]; then
-    log_error "Invalid API token (HTTP $http_code). Get one at kern.technology"
+    log_error "Invalid API token (HTTP $http_code)."
+    log_error "Register at https://install.openkern.org/register.html"
     exit 1
   fi
 
-  # Parse KERN config (cert ARN and zone info)
+  # Parse credentials and config from response
+  KERN_DATABASE_URI=$(echo "$body" | grep -o '"databaseUri":"[^"]*"' | cut -d'"' -f4)
   KERN_WILDCARD_CERT_ARN=$(echo "$body" | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
   KERN_REGION=$(echo "$body" | grep -o '"region":"[^"]*"' | cut -d'"' -f4)
 
-  if [[ -z "$KERN_WILDCARD_CERT_ARN" ]]; then
-    log_error "Could not parse KERN config. Contact KERN support."
+  if [[ -z "$KERN_DATABASE_URI" || -z "$KERN_WILDCARD_CERT_ARN" ]]; then
+    log_error "Could not parse KERN credentials. Contact hello@kern.technology"
     exit 1
   fi
 
-  log_ok "API token valid. KERN region: $KERN_REGION"
-  echo ""
-}
-
-prompt_credentials() {
-  echo -e "${BOLD}Database Credentials${NC}"
-  echo "─────────────────────────────────────────────"
-  echo ""
-
-  KERN_DB_HOST=$(prompt_value "Database host" "")
-  KERN_DB_PORT=$(prompt_value "Database port" "5432")
-  KERN_DB_NAME=$(prompt_value "Database name" "")
-  KERN_DB_USER=$(prompt_value "Database user" "")
-  read -r -s -p "$(echo -e "${BOLD}Database password${NC}: ")" KERN_DB_PASSWORD
-  echo ""
-  echo ""
-
-  # Validate connection
-  log_info "Testing database connection..."
-
-  if command -v psql &> /dev/null; then
-    if PGPASSWORD="$KERN_DB_PASSWORD" psql -h "$KERN_DB_HOST" -p "$KERN_DB_PORT" \
-      -U "$KERN_DB_USER" -d "$KERN_DB_NAME" -c "SELECT 1" --set=sslmode=require &> /dev/null; then
-      log_ok "Database connection successful!"
-    else
-      log_warn "Could not connect to database. Credentials will be validated during deployment."
-      log_warn "If this fails later, check your credentials and that your IP can reach the DB."
-    fi
-  else
-    log_warn "psql not installed — skipping connection test."
-  fi
-
+  log_ok "API token valid. Database and config loaded."
   echo ""
 }
 
@@ -345,7 +316,7 @@ deploy() {
 
   local PAYLOAD_SECRET_KEY
   PAYLOAD_SECRET_KEY=$(openssl rand -hex 32)
-  local DATABASE_URI="postgresql://${KERN_DB_USER}:${KERN_DB_PASSWORD}@${KERN_DB_HOST}:${KERN_DB_PORT}/${KERN_DB_NAME}?sslmode=require"
+  local DATABASE_URI="$KERN_DATABASE_URI"
 
   # 1. Set up project directory
   local WORK_DIR
@@ -515,7 +486,6 @@ main() {
   print_banner
   preflight
   prompt_kern_token
-  prompt_credentials
   prompt_project
   prompt_admin
   confirm
