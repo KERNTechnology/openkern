@@ -9,7 +9,7 @@ const config: OpenNextConfig = {
   },
 
   imageOptimization: {
-    arch: "arm64",
+    override: {},
   },
 
   buildCommand: "npx next build",

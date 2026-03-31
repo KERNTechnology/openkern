@@ -73,8 +73,8 @@ npm run build:open-next
 
 OPEN_NEXT_DIR="$CMS_DIR/.open-next"
 
-if [[ ! -d "$OPEN_NEXT_DIR/server-function" ]]; then
-  error "OpenNext build output not found at $OPEN_NEXT_DIR/server-function"
+if [[ ! -d "$OPEN_NEXT_DIR/server-functions/default" ]]; then
+  error "OpenNext build output not found at $OPEN_NEXT_DIR/server-functions/default"
   exit 1
 fi
 
@@ -103,7 +103,7 @@ success "Static assets uploaded."
 
 # ── Step 4: Deploy server function ────────────────────────────────────────────
 info "Packaging server function..."
-cd "$OPEN_NEXT_DIR/server-function"
+cd "$OPEN_NEXT_DIR/server-functions/default"
 zip -qr /tmp/openkern-server.zip .
 
 info "Updating Lambda function: $SERVER_FUNCTION"

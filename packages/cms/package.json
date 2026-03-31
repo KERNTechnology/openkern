@@ -21,7 +21,7 @@
     "@opennextjs/aws": "^3.0.0",
     "@payloadcms/plugin-seo": "^3.0.0",
     "@payloadcms/ui": "^3.0.0",
-    "next": "^15.0.0",
+    "next": "~15.4.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "graphql": "^16.8.0",
