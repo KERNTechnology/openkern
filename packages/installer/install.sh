@@ -152,13 +152,18 @@ prompt_kern_token() {
   echo "Register at https://kern.technology/register or contact hello@kern.technology"
   echo ""
 
-  read -r -s -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
+  read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
   echo ""
+
+  if [[ -z "$KERN_API_TOKEN" ]]; then
+    log_error "API token cannot be empty."
+    exit 1
+  fi
 
   # Validate token by fetching KERN config
   log_info "Validating API token..."
   local config_response
-  config_response=$(curl -s -w "\n%{http_code}" \
+  config_response=$(curl -s --max-time 10 -w "\n%{http_code}" \
     -H "Authorization: Bearer $KERN_API_TOKEN" \
     "${KERN_API_URL}/v1/config" 2>/dev/null) || true
 
@@ -206,11 +211,11 @@ prompt_credentials() {
       -U "$KERN_DB_USER" -d "$KERN_DB_NAME" -c "SELECT 1" --set=sslmode=require &> /dev/null; then
       log_ok "Database connection successful!"
     else
-      log_error "Could not connect to database. Please check your credentials."
-      exit 1
+      log_warn "Could not connect to database. Credentials will be validated during deployment."
+      log_warn "If this fails later, check your credentials and that your IP can reach the DB."
     fi
   else
-    log_warn "psql not installed — skipping connection test. Credentials will be validated during deployment."
+    log_warn "psql not installed — skipping connection test."
   fi
 
   echo ""
@@ -218,7 +223,7 @@ prompt_credentials() {
 
 generate_subdomain() {
   # Generate a random 8-character lowercase alphanumeric string
-  LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8
+  LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8 || true
 }
 
 prompt_project() {
@@ -234,11 +239,11 @@ prompt_project() {
   while true; do
     SUBDOMAIN=$(generate_subdomain)
     local dns_check
-    dns_check=$(curl -s -H "Authorization: Bearer $KERN_API_TOKEN" \
+    dns_check=$(curl -s --max-time 10 -H "Authorization: Bearer $KERN_API_TOKEN" \
       "${KERN_API_URL}/v1/dns/${SUBDOMAIN}" 2>/dev/null) || true
 
     local available
-    available=$(echo "$dns_check" | grep -o '"available":true' || true)
+    available=$(echo "$dns_check" | grep -o '"available"[[:space:]]*:[[:space:]]*true' || true)
 
     if [[ -n "$available" ]]; then
       break
