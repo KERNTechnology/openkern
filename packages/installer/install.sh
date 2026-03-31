@@ -159,6 +159,7 @@ prompt_kern_token() {
     KERN_API_TOKEN=$(echo "$secret_value" | grep -o '"apiToken":"[^"]*"' | cut -d'"' -f4)
 
     if [[ -n "$KERN_API_TOKEN" ]]; then
+      KERN_USED_SECRET=true
       log_ok "Config found in AWS Secrets Manager (openkern/config)."
       echo ""
       echo "  The following was stored in your AWS account:"
@@ -482,6 +483,32 @@ EOL
   else
     log_warn "Could not auto-create admin user (HTTP $REGISTER_RESPONSE)."
     log_warn "Visit ${ADMIN_URL} to create your first admin account manually."
+  fi
+
+  # Offer to clean up Secrets Manager secret (no longer needed)
+  if [[ "$KERN_USED_SECRET" == "true" ]]; then
+    echo ""
+    echo "─────────────────────────────────────────────"
+    echo ""
+    echo "  Your API token was read from AWS Secrets Manager (openkern/config)."
+    echo "  It's now stored in your Pulumi config and no longer needed in Secrets Manager."
+    echo "  Keeping it costs ~\$0.40/month."
+    echo ""
+    local cleanup
+    cleanup=$(prompt_value "Delete openkern/config from Secrets Manager? (yes/no)" "yes")
+
+    if [[ "$cleanup" == "yes" || "$cleanup" == "y" ]]; then
+      if aws secretsmanager delete-secret --secret-id openkern/config \
+        --force-delete-without-recovery --region "${AWS_REGION}" &> /dev/null; then
+        log_ok "Secret openkern/config deleted."
+      else
+        log_warn "Could not delete secret. You can do it manually:"
+        log_warn "  aws secretsmanager delete-secret --secret-id openkern/config"
+      fi
+    else
+      log_info "Secret kept. Delete it anytime with:"
+      log_info "  aws secretsmanager delete-secret --secret-id openkern/config"
+    fi
   fi
 
   # Done
