@@ -1,18 +1,21 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { assetsBucket, mediaBucket, oai } from "./storage";
-import { functionUrl, imageFunctionUrl } from "./compute";
+import { lambdaFunctionUrl, imageLambdaUrl } from "./compute";
 
 const config = new pulumi.Config("openkern");
 const projectName = config.require("projectName");
 
 // Every customer gets a subdomain like a7f3x.openkern.org (set by the installer).
-// The wildcard ACM cert for *.openkern.org lives in the KERN main account.
+// DNS CNAME points <subdomain>.openkern.org → xyz.cloudfront.net.
+// CloudFront uses the shared *.openkern.org wildcard cert from kern-central.
 const subdomain = config.require("subdomain"); // e.g. "a7f3x"
 const siteHost = `${subdomain}.openkern.org`;
+
+// Wildcard ACM cert for *.openkern.org (us-east-1) — provided by kern-central.
 const wildcardCertArn = config.require("wildcardCertArn");
 
-// Optional custom domain (free) — customer manages their own ACM cert in their account.
+// Optional custom domain (paid add-on) — customer creates their own ACM cert in us-east-1.
 const customDomain = config.get("customDomain") || "";
 const customCertArn = config.get("customCertArn") || "";
 
@@ -23,12 +26,12 @@ const tags = {
 };
 
 // Extract Lambda function URL hostnames (strip protocol and trailing slash)
-const lambdaOriginDomain = functionUrl.apply((url) => {
+const lambdaOriginDomain = lambdaFunctionUrl.apply((url) => {
   const parsed = new URL(url);
   return parsed.hostname;
 });
 
-const imageOriginDomain = imageFunctionUrl.apply((url) => {
+const imageOriginDomain = imageLambdaUrl.apply((url) => {
   const parsed = new URL(url);
   return parsed.hostname;
 });
@@ -43,7 +46,7 @@ export const distribution = new aws.cloudfront.Distribution(
     defaultRootObject: "",
     priceClass: "PriceClass_100", // US + Europe (cheapest)
 
-    // Aliases: always includes the openkern.org subdomain, plus optional custom domain
+    // Aliases: always include the openkern.org subdomain; optionally add a custom domain.
     aliases: customDomain ? [siteHost, customDomain] : [siteHost],
 
     // Default behavior — routes to Lambda (Payload + Next.js SSR)
@@ -141,21 +144,13 @@ export const distribution = new aws.cloudfront.Distribution(
       },
     },
 
-    // Use the KERN wildcard cert (*.openkern.org) by default.
-    // If a custom domain is configured with its own cert, use that instead
-    // (the custom cert must also cover the openkern.org subdomain as a SAN,
-    // or the customer accepts that only their custom domain uses HTTPS with their cert).
-    viewerCertificate: customCertArn
-      ? {
-          acmCertificateArn: customCertArn,
-          sslSupportMethod: "sni-only",
-          minimumProtocolVersion: "TLSv1.2_2021",
-        }
-      : {
-          acmCertificateArn: wildcardCertArn,
-          sslSupportMethod: "sni-only",
-          minimumProtocolVersion: "TLSv1.2_2021",
-        },
+    // Always use the wildcard cert for *.openkern.org.
+    // Custom domain: customer provides their own ACM cert — use that instead.
+    viewerCertificate: {
+      acmCertificateArn: customCertArn || wildcardCertArn,
+      sslSupportMethod: "sni-only",
+      minimumProtocolVersion: "TLSv1.2_2021",
+    },
 
     tags: { ...tags, Name: `${projectName}-cdn` },
   },
