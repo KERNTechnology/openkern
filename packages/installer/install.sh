@@ -136,10 +136,10 @@ prompt_value() {
   local result
 
   if [ -n "$default" ]; then
-    read -r -p "$(echo -e "${BOLD}$prompt${NC} [$default]: ")" result
+    read -r -p "$(echo -e "${BOLD}$prompt${NC} [$default]: ")" result < /dev/tty
     echo "${result:-$default}"
   else
-    read -r -p "$(echo -e "${BOLD}$prompt${NC}: ")" result
+    read -r -p "$(echo -e "${BOLD}$prompt${NC}: ")" result < /dev/tty
     echo "$result"
   fi
 }
@@ -182,7 +182,7 @@ prompt_kern_token() {
     echo "Register at https://install.openkern.org/register.html"
     echo ""
 
-    read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN
+    read -r -p "$(echo -e "${BOLD}KERN API token${NC}: ")" KERN_API_TOKEN < /dev/tty
     echo ""
 
     if [[ -z "$KERN_API_TOKEN" ]]; then
@@ -298,12 +298,12 @@ prompt_admin() {
   echo ""
 
   ADMIN_EMAIL=$(prompt_value "Admin email" "")
-  read -r -s -p "$(echo -e "${BOLD}Admin password${NC} (min. 8 characters): ")" ADMIN_PASSWORD
+  read -r -s -p "$(echo -e "${BOLD}Admin password${NC} (min. 8 characters): ")" ADMIN_PASSWORD < /dev/tty
   echo ""
 
   while [ ${#ADMIN_PASSWORD} -lt 8 ]; do
     log_warn "Password must be at least 8 characters."
-    read -r -s -p "$(echo -e "${BOLD}Admin password${NC}: ")" ADMIN_PASSWORD
+    read -r -s -p "$(echo -e "${BOLD}Admin password${NC}: ")" ADMIN_PASSWORD < /dev/tty
     echo ""
   done
 
