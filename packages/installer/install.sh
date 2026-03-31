@@ -149,6 +149,9 @@ prompt_kern_token() {
   echo "─────────────────────────────────────────────"
   echo ""
 
+  KERN_API_TOKEN=""
+  KERN_USED_SECRET=false
+
   # Check if config was pre-stored in AWS Secrets Manager
   local secret_value
   secret_value=$(aws secretsmanager get-secret-value \
@@ -156,7 +159,7 @@ prompt_kern_token() {
     --query SecretString --output text 2>/dev/null) || true
 
   if [[ -n "$secret_value" ]]; then
-    KERN_API_TOKEN=$(echo "$secret_value" | grep -o '"apiToken":"[^"]*"' | cut -d'"' -f4)
+    KERN_API_TOKEN=$(echo "$secret_value" | grep -o '"apiToken":"[^"]*"' | cut -d'"' -f4 || true)
 
     if [[ -n "$KERN_API_TOKEN" ]]; then
       KERN_USED_SECRET=true
