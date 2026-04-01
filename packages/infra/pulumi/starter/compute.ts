@@ -71,6 +71,7 @@ export const serverFunction = new aws.lambda.Function(
       variables: {
         DATABASE_URI: databaseUri,
         PAYLOAD_SECRET: payloadSecret,
+        SERVER_URL: "",  // Set after deploy via: aws lambda update-function-configuration
         S3_BUCKET: mediaBucket.bucket,
         S3_REGION: aws.config.region || "eu-central-1",
         CACHE_BUCKET_NAME: mediaBucket.bucket,
