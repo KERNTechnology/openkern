@@ -37,6 +37,20 @@ const apiOriginDomain = apiUrl.apply((url) => {
   return parsed.hostname;
 });
 
+// CloudFront Function: override x-forwarded-host so Next.js Server Actions
+// don't reject the request (API Gateway sets its own domain as x-forwarded-host,
+// but the browser sends the CloudFront domain as origin — Next.js requires they match).
+const fixHostHeader = new aws.cloudfront.Function(`${projectName}-fix-host`, {
+  runtime: "cloudfront-js-2.0",
+  code: `
+function handler(event) {
+  var request = event.request;
+  request.headers['x-forwarded-host'] = { value: request.headers['host'].value };
+  return request;
+}
+`,
+});
+
 // CloudFront distribution
 export const distribution = new aws.cloudfront.Distribution(
   `${projectName}-cdn`,
@@ -67,6 +81,12 @@ export const distribution = new aws.cloudfront.Distribution(
       compress: true,
       cachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad", // CachingDisabled
       originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac", // AllViewerExceptHostHeader
+      functionAssociations: [
+        {
+          eventType: "viewer-request",
+          functionArn: fixHostHeader.arn,
+        },
+      ],
     },
 
     // Static assets and media from S3
@@ -89,6 +109,12 @@ export const distribution = new aws.cloudfront.Distribution(
         compress: true,
         cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6", // CachingOptimized
         originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac", // AllViewerExceptHostHeader
+        functionAssociations: [
+          {
+            eventType: "viewer-request",
+            functionArn: fixHostHeader.arn,
+          },
+        ],
       },
       {
         pathPattern: "/media/*",

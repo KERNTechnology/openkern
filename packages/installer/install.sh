@@ -394,13 +394,13 @@ EOL
   SERVER_FUNCTION=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output lambdaFunctionName)
   MEDIA_BUCKET=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output mediaBucketName)
   CF_URL="https://${CF_DOMAIN}"
-  # API Gateway host for x-forwarded-host trust (Server Actions)
-  API_HOST=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output apiUrl | sed 's|https://||;s|/$||')
+  # API Gateway origin for Server Actions trust (x-forwarded-host validation)
+  API_HOST=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output apiUrl | sed 's|/$||')
 
   log_info "Setting SERVER_URL to ${CF_URL}..."
   aws lambda update-function-configuration \
     --function-name "$SERVER_FUNCTION" \
-    --environment "Variables={DATABASE_URI=${DATABASE_URI},PAYLOAD_SECRET=${PAYLOAD_SECRET_KEY},S3_BUCKET=${MEDIA_BUCKET},S3_REGION=${AWS_REGION},CACHE_BUCKET_NAME=${MEDIA_BUCKET},CACHE_BUCKET_REGION=${AWS_REGION},NODE_ENV=production,SERVER_URL=${CF_URL},ALLOWED_FORWARDED_HOSTS=${API_HOST}}" \
+    --environment "Variables={DATABASE_URI=${DATABASE_URI},PAYLOAD_SECRET=${PAYLOAD_SECRET_KEY},S3_BUCKET=${MEDIA_BUCKET},S3_REGION=${AWS_REGION},CACHE_BUCKET_NAME=${MEDIA_BUCKET},CACHE_BUCKET_REGION=${AWS_REGION},NODE_ENV=production,SERVER_URL=${CF_URL},ALLOWED_ORIGINS=${API_HOST}}" \
     --region "$AWS_REGION" --output text > /dev/null
   aws lambda wait function-updated --function-name "$SERVER_FUNCTION" --region "$AWS_REGION"
   log_ok "SERVER_URL set."
