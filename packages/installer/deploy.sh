@@ -69,6 +69,9 @@ info "Region:           $REGION"
 info "Building Next.js app with OpenNext..."
 cd "$CMS_DIR"
 
+info "Generating Payload import map..."
+npx payload generate:importmap
+
 npm run build:open-next
 
 OPEN_NEXT_DIR="$CMS_DIR/.open-next"

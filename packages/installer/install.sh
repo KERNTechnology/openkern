@@ -222,10 +222,6 @@ prompt_kern_token() {
   echo ""
 }
 
-generate_subdomain() {
-  # Generate a random 8-character lowercase alphanumeric string
-  LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8 || true
-}
 
 prompt_project() {
   echo -e "${BOLD}Project Configuration${NC}"
@@ -277,10 +273,6 @@ confirm() {
   echo "  Project:     $PROJECT_NAME"
   echo "  Template:    $TEMPLATE"
   echo "  AWS Region:  $AWS_REGION"
-  echo "  Site URL:    https://${SUBDOMAIN}.openkern.org"
-  if [[ -n "$CUSTOM_DOMAIN" ]]; then
-    echo "  Custom:      https://$CUSTOM_DOMAIN"
-  fi
   echo "  Admin:       $ADMIN_EMAIL"
   echo "  Database:    KERN Managed (automatic)"
   echo ""
@@ -305,7 +297,13 @@ deploy() {
 
   local PAYLOAD_SECRET_KEY
   PAYLOAD_SECRET_KEY=$(openssl rand -hex 32)
-  local DATABASE_URI="$KERN_DATABASE_URI"
+  # Ensure sslmode=no-verify — Aurora RDS certs are not in Node.js default trust store.
+  local DATABASE_URI
+  if echo "$KERN_DATABASE_URI" | grep -q "sslmode="; then
+    DATABASE_URI=$(echo "$KERN_DATABASE_URI" | sed 's/sslmode=[^&]*/sslmode=no-verify/')
+  else
+    DATABASE_URI="${KERN_DATABASE_URI}?sslmode=no-verify"
+  fi
 
   # 1. Set up project directory
   local WORK_DIR
@@ -391,13 +389,28 @@ EOL
   cd "$WORK_DIR"
   bash packages/installer/deploy.sh --stack-dir "$WORK_DIR/packages/infra/pulumi/starter"
 
-  # 7. Create initial admin user via Payload
-  log_info "Creating admin user..."
-  cd "$WORK_DIR/packages/cms"
+  # 7. Set SERVER_URL on Lambda (needed for Payload admin UI)
+  local SERVER_FUNCTION CF_URL
+  SERVER_FUNCTION=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output lambdaFunctionName)
+  CF_URL="https://${CF_DOMAIN}"
 
-  # Payload CMS auto-runs migrations on first request. Trigger it, then create admin.
-  local SERVER_URL
-  SERVER_URL=$(cd "$WORK_DIR/packages/infra/pulumi/starter" && pulumi stack output lambdaFunctionUrl)
+  log_info "Setting SERVER_URL to ${CF_URL}..."
+  aws lambda update-function-configuration \
+    --function-name "$SERVER_FUNCTION" \
+    --environment "Variables={DATABASE_URI=${DATABASE_URI},PAYLOAD_SECRET=${PAYLOAD_SECRET_KEY},S3_BUCKET=${ASSETS_BUCKET},S3_REGION=${AWS_REGION},CACHE_BUCKET_NAME=${ASSETS_BUCKET},CACHE_BUCKET_REGION=${AWS_REGION},NODE_ENV=production,SERVER_URL=${CF_URL}}" \
+    --region "$AWS_REGION" --output text > /dev/null
+  aws lambda wait function-updated --function-name "$SERVER_FUNCTION" --region "$AWS_REGION"
+  log_ok "SERVER_URL set."
+
+  # 8. Run Payload migrations
+  log_info "Running database migrations..."
+  cd "$WORK_DIR/packages/cms"
+  NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate
+
+  # 9. Create initial admin user via Payload
+  log_info "Creating admin user..."
+
+  local SERVER_URL="${CF_URL}"
 
   # Wait for Lambda cold start
   sleep 5
@@ -454,10 +467,6 @@ EOL
   echo "  Admin:       $ADMIN_URL"
   echo "  Email:       $ADMIN_EMAIL"
   echo ""
-  if [[ -n "$CUSTOM_DOMAIN" ]]; then
-    echo "  Custom domain: https://$CUSTOM_DOMAIN"
-    echo "  Point a CNAME from $CUSTOM_DOMAIN to ${SUBDOMAIN}.openkern.org"
-  fi
   echo ""
   echo "  To redeploy after changes:"
   echo "    cd $WORK_DIR && bash packages/installer/deploy.sh"
