@@ -144,7 +144,7 @@ function SiteFooter({
     <footer className="site-footer">
       <div className="container">
         <p className="site-footer__copy" style={{ marginBottom: "0.5rem" }}>
-          Built with <strong>OpenKERN</strong> — Payload CMS + Next.js on AWS
+          Built with <a href="https://install.openkern.org" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: "2px" }}><strong>OpenKERN</strong></a> — Payload CMS + Next.js on AWS
         </p>
 
         {allLinks.length > 0 && (
