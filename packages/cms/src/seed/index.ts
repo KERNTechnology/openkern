@@ -322,7 +322,7 @@ async function seedHeader(payload: Payload): Promise<void> {
       navItems: [
         { label: "Startseite", url: "/" },
         { label: "Features", url: "#features" },
-        { label: "Blog", url: "#" },
+        { label: "KERN", url: "https://www.kern.technology" },
       ],
       ctaButton: {
         enabled: true,
@@ -344,14 +344,14 @@ async function seedFooter(payload: Payload): Promise<void> {
           heading: "Links",
           links: [
             { label: "Admin Panel", url: "/admin" },
-            { label: "GitHub", url: "https://github.com/niceSolutions" },
-            { label: "KERN", url: "https://kern.de" },
+            { label: "GitHub", url: "https://github.com/kern-technology/openkern" },
+            { label: "KERN", url: "https://www.kern.technology" },
           ],
         },
       ],
       copyright: `\u00A9 ${new Date().getFullYear()} OpenKERN. Alle Rechte vorbehalten.`,
       socialLinks: [
-        { platform: "github", url: "https://github.com/niceSolutions" },
+        { platform: "github", url: "https://github.com/kern-technology/openkern" },
       ],
     },
   });
