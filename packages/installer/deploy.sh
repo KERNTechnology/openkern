@@ -86,16 +86,27 @@ success "OpenNext build complete."
 # ── Step 2b: Add sharp linux-x64 binaries to server function ─────────────────
 # Lambda runs on linux-x64, but local dev may be macOS/arm64. We download the
 # correct native binaries and inject them into the OpenNext build output.
+# Versions are read from the installed sharp package to avoid mismatches.
 info "Adding sharp linux-x64 binaries..."
 SERVER_NM="$OPEN_NEXT_DIR/server-functions/default/node_modules"
+SHARP_VERSION=$(node -p "require('$CMS_DIR/node_modules/sharp/package.json').version")
+# libvips version: sharp 0.33.x uses 8.15.x, sharp 0.34.x uses 1.2.x
+LIBVIPS_VERSION=$(node -p "try{require('$CMS_DIR/node_modules/@img/sharp-darwin-arm64/package.json').optionalDependencies['@img/sharp-libvips-darwin-arm64']||''}catch{''}" 2>/dev/null || echo "")
+if [[ -z "$LIBVIPS_VERSION" ]]; then
+  # Fallback: read from any available platform binary
+  LIBVIPS_VERSION=$(ls "$CMS_DIR/node_modules/@img/" 2>/dev/null | grep "sharp-libvips" | head -1 | xargs -I{} node -p "require('$CMS_DIR/node_modules/@img/{}/package.json').version" 2>/dev/null || echo "8.15.5")
+fi
+info "Sharp version: $SHARP_VERSION, libvips: $LIBVIPS_VERSION"
+
 mkdir -p "$SERVER_NM/@img"
 cp -r "$CMS_DIR/node_modules/sharp" "$SERVER_NM/sharp" 2>/dev/null || true
 # Remove non-linux platform binaries
 rm -rf "$SERVER_NM/@img/sharp-darwin-"* "$SERVER_NM/@img/sharp-libvips-darwin-"* \
-       "$SERVER_NM/@img/sharp-linux-arm64" "$SERVER_NM/@img/sharp-libvips-linux-arm64"
-# Download linux-x64 binaries
-(cd /tmp && curl -sL https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.34.5.tgz | tar xz && mv package "$SERVER_NM/@img/sharp-linux-x64")
-(cd /tmp && curl -sL https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.2.4.tgz | tar xz && mv package "$SERVER_NM/@img/sharp-libvips-linux-x64")
+       "$SERVER_NM/@img/sharp-linux-arm64" "$SERVER_NM/@img/sharp-libvips-linux-arm64" \
+       "$SERVER_NM/@img/sharp-linux-x64" "$SERVER_NM/@img/sharp-libvips-linux-x64"
+# Download matching linux-x64 binaries
+(cd /tmp && curl -sL "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-${SHARP_VERSION}.tgz" | tar xz && mv package "$SERVER_NM/@img/sharp-linux-x64")
+(cd /tmp && curl -sL "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-${LIBVIPS_VERSION}.tgz" | tar xz && mv package "$SERVER_NM/@img/sharp-libvips-linux-x64")
 success "Sharp binaries added."
 
 # ── Step 3: Upload static assets to S3 ───────────────────────────────────────

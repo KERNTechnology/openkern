@@ -49,7 +49,6 @@ export default buildConfig({
     s3Storage({
       collections: {
         media: {
-          disableLocalStorage: true,
           prefix: "media",
         },
       },
