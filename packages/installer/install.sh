@@ -407,6 +407,11 @@ EOL
   cd "$WORK_DIR/packages/cms"
   NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate
 
+  # 8b. Seed demo content
+  log_info "Seeding demo content..."
+  NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload run src/seed/index.ts
+  log_ok "Demo content created."
+
   # 9. Create initial admin user via Payload
   log_info "Creating admin user..."
 
