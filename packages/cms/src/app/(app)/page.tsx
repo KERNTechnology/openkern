@@ -201,13 +201,37 @@ function HowItWorksSection() {
    -------------------------------------------------------------------------- */
 
 const STACK_ITEMS = [
-  { icon: "\u{1F4DD}", name: "Payload CMS", desc: "Headless CMS" },
-  { icon: "\u26A1", name: "Next.js 15", desc: "React Framework" },
-  { icon: "\u{1F4E6}", name: "AWS Lambda", desc: "Serverless Compute" },
-  { icon: "\u{1F310}", name: "CloudFront", desc: "CDN & Edge" },
-  { icon: "\u{1F5C4}\uFE0F", name: "S3", desc: "Object Storage" },
-  { icon: "\u{1F527}", name: "Pulumi", desc: "Infrastructure as Code" },
-] as const;
+  {
+    name: "Payload CMS",
+    desc: "Headless CMS",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>,
+  },
+  {
+    name: "Next.js 15",
+    desc: "React Framework",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" x2="12" y1="22" y2="8.5"/><polyline points="22 8.5 12 8.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/></svg>,
+  },
+  {
+    name: "AWS Lambda",
+    desc: "Serverless Compute",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>,
+  },
+  {
+    name: "CloudFront",
+    desc: "CDN & Edge",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  },
+  {
+    name: "S3",
+    desc: "Object Storage",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>,
+  },
+  {
+    name: "Pulumi",
+    desc: "Infrastructure as Code",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+  },
+];
 
 function StackSection() {
   return (

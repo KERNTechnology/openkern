@@ -485,8 +485,15 @@ img {
 }
 
 .stack-card__icon {
-  font-size: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius);
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
+  color: var(--color-primary);
 }
 
 .stack-card__name {
