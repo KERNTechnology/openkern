@@ -49,6 +49,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       settings?.siteDescription ??
       "Built with OpenKERN — Payload CMS + Next.js on AWS",
+    icons: {
+      icon: "/icon.svg",
+    },
   };
 }
 
