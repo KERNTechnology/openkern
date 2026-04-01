@@ -5,11 +5,14 @@
 [![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.79.1-6366f1.svg)](https://payloadcms.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15.4-black.svg)](https://nextjs.org)
 
-**Standardized AWS stack for KERN client projects.**
+**Modern web publishing stack on your own AWS. Open source. One command.**
 
-OpenKERN deploys a modern web publishing stack (Payload CMS + Next.js) on your AWS account. It's the technical tool behind [kern.technology](https://www.kern.technology) — designed for tech leads who need to roll out the KERN stack on their infrastructure.
+OpenKERN deploys Payload CMS + Next.js as a serverless stack on your AWS account — Lambda, S3, CloudFront, Infrastructure as Code. Everything runs on your infrastructure, nothing is locked in.
 
-**Sent here by KERN?** [Register for your API token](https://install.openkern.org/register.html) and deploy in under 30 minutes.
+Built by [KERN](https://www.kern.technology) as the foundation for client projects. **Free to use for everyone** — whether you're a KERN client or just want a modern CMS stack on AWS.
+
+**Try it:** [Register for a free API token](https://install.openkern.org/register.html) and deploy in under 30 minutes.  
+**Want KERN to build your site?** [Let's talk](https://www.kern.technology#kontakt)
 
 ---
 
@@ -54,7 +57,7 @@ The installer deploys Lambda + S3 + CloudFront on your AWS account and connects 
 
 ### Starter (Free)
 
-The default for new KERN client projects.
+The fastest way to get started. Free for everyone.
 
 ```
 Your AWS Account                          KERN (managed)
@@ -165,23 +168,15 @@ openkern/
 
 ### CloudFront returns 403
 
-**Symptom:** Your site at `<subdomain>.openkern.org` shows a CloudFront 403 error.
+**Symptom:** Your CloudFront distribution returns a 403 error.
 
-**Fix:**
+**Cause:** Usually a mismatch between the CloudFront origin and Lambda/API Gateway configuration.
+
+**Fix:** Re-run `pulumi up` to ensure all resources are in sync:
 ```bash
 cd packages/infra/pulumi/starter
-pulumi config get openkern:wildcardCertArn
-
-# If empty, fetch from KERN API:
-CERT_ARN=$(curl -s -H "Authorization: Bearer $YOUR_TOKEN" \
-  https://api.openkern.org/v1/config | grep -o '"wildcardCertArn":"[^"]*"' | cut -d'"' -f4)
-pulumi config set openkern:wildcardCertArn "$CERT_ARN"
 pulumi up
 ```
-
-### InvalidViewerCertificate error
-
-CloudFront requires certificates in `us-east-1`. Verify your cert ARN starts with `arn:aws:acm:us-east-1:`.
 
 ### Database connection warning during install
 
@@ -201,29 +196,16 @@ Re-run the deploy script to upload assets to S3 and invalidate CloudFront:
 cd packages/installer && ./deploy.sh
 ```
 
-### DNS not resolving
-
-```bash
-dig <subdomain>.openkern.org CNAME
-
-# If missing, re-create:
-CF_DOMAIN=$(cd packages/infra/pulumi/starter && pulumi stack output distributionDomain)
-curl -s -X POST -H "Authorization: Bearer $YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"subdomain\":\"<subdomain>\",\"cloudfrontDomain\":\"$CF_DOMAIN\"}" \
-  https://api.openkern.org/v1/dns
-```
-
 ### Need help?
 
-Contact **support@kern.technology** with your project name, subdomain, error output, and AWS region.
+Contact **support@kern.technology** with your project name, error output, and AWS region.
 
 ---
 
 ## FAQ
 
 **Who is this for?**
-Tech leads and developers at agencies that work with KERN. If your agency uses KERN for web projects, this is the tool to deploy the stack on your AWS.
+Anyone who wants a modern CMS on their own AWS infrastructure. Developers, agencies, tech leads — if you want Payload CMS + Next.js deployed as a serverless stack without managing infrastructure yourself, OpenKERN is for you. KERN clients get additional support and custom development.
 
 **Is my data safe on Starter?**
 Your database on KERN's Aurora is fully isolated (own PostgreSQL database, own credentials, SSL-only). Starter is for publishing content — blog posts, pages, media. For full data sovereignty, upgrade to Professional.
