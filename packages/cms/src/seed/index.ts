@@ -322,6 +322,7 @@ async function seedHeader(payload: Payload): Promise<void> {
       navItems: [
         { label: "Startseite", url: "/" },
         { label: "Features", url: "#features" },
+        { label: "Blog", url: "/blog" },
         { label: "KERN", url: "https://www.kern.technology" },
       ],
       ctaButton: {
