@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # CMS dependencies (Payload, Next.js, React)
+  - package-ecosystem: "npm"
+    directory: "/packages/cms"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      payload:
+        patterns:
+          - "payload"
+          - "@payloadcms/*"
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+
+  # Installer infrastructure (Pulumi)
+  - package-ecosystem: "npm"
+    directory: "/packages/infra/pulumi/starter"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "infrastructure"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"
