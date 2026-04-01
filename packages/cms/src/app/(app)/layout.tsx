@@ -81,7 +81,7 @@ function SiteHeader({
     <header className="site-header">
       <div className="container">
         <a href="/" className="site-header__logo">
-          <span>{siteName}</span>
+          Open<span>KERN</span>
         </a>
 
         <nav>
@@ -90,7 +90,7 @@ function SiteHeader({
               <li key={item.id ?? item.url}>
                 <a
                   href={item.url}
-                  {...(item.openInNewTab
+                  {...(item.url.startsWith("http")
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
                 >
@@ -105,6 +105,16 @@ function SiteHeader({
                 </a>
               </li>
             )}
+            <li>
+              <a
+                href="https://www.kern.technology#kontakt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="site-header__cta"
+              >
+                Kontakt
+              </a>
+            </li>
           </ul>
         </nav>
       </div>

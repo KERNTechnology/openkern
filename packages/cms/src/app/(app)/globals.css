@@ -131,21 +131,16 @@ img {
 }
 
 .site-header__logo {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-light);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  text-decoration: none;
 }
 
 .site-header__logo span {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-primary-purple)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 400;
+  opacity: 0.5;
 }
 
 .site-header__nav {
