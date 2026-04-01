@@ -1,5 +1,10 @@
 # OpenKERN
 
+[![CI](https://github.com/kern-technology/openkern/actions/workflows/ci.yml/badge.svg)](https://github.com/kern-technology/openkern/actions/workflows/ci.yml)
+[![License: BSL 1.1](https://img.shields.io/badge/license-BSL%201.1-blue.svg)](LICENSE)
+[![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.79.1-6366f1.svg)](https://payloadcms.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15.4-black.svg)](https://nextjs.org)
+
 **Standardized AWS stack for KERN client projects.**
 
 OpenKERN deploys a modern web publishing stack (Payload CMS + Next.js) on your AWS account. It's the technical tool behind [kern.technology](https://www.kern.technology) — designed for tech leads who need to roll out the KERN stack on their infrastructure.
