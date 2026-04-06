@@ -57,6 +57,8 @@ DISTRIBUTION_ID=$(pulumi stack output distributionId 2>/dev/null) || {
   error "Could not read distributionId from Pulumi."
   exit 1
 }
+SITE_URL=$(pulumi stack output siteUrl 2>/dev/null || echo "")
+DISTRIBUTION_DOMAIN=$(pulumi stack output distributionDomain 2>/dev/null || echo "")
 REGION=$(aws configure get region 2>/dev/null || echo "eu-central-1")
 
 info "Assets bucket:    $ASSETS_BUCKET"
@@ -187,4 +189,13 @@ success "CloudFront invalidation created."
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 success "Deployment complete!"
-info "Your site should be live within a few minutes (CloudFront propagation)."
+echo ""
+if [[ -n "$SITE_URL" ]]; then
+  success "Site:  $SITE_URL"
+  success "Admin: $SITE_URL/admin"
+elif [[ -n "$DISTRIBUTION_DOMAIN" ]]; then
+  success "Site:  https://$DISTRIBUTION_DOMAIN"
+  success "Admin: https://$DISTRIBUTION_DOMAIN/admin"
+fi
+echo ""
+info "CloudFront may take 1-2 minutes to propagate changes."
