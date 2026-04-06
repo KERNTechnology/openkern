@@ -220,6 +220,44 @@ prompt_kern_token() {
   fi
 
   log_ok "API token valid. Database and config loaded."
+
+  # Check for existing OpenKERN installations in this AWS account
+  local existing_lambdas
+  existing_lambdas=$(aws lambda list-functions --region "${KERN_REGION:-eu-central-1}" \
+    --query "Functions[?starts_with(FunctionName, 'openkern') || contains(FunctionName, '-server')].FunctionName" \
+    --output text 2>/dev/null || true)
+
+  # Filter to only OpenKERN-tagged functions
+  local existing_sites=""
+  for fn in $existing_lambdas; do
+    local fn_tags
+    fn_tags=$(aws lambda list-tags --resource "arn:aws:lambda:${KERN_REGION:-eu-central-1}:$(aws sts get-caller-identity --query Account --output text):function:${fn}" \
+      --query "Tags.Project" --output text 2>/dev/null || true)
+    if [[ "$fn_tags" == "openkern" ]]; then
+      existing_sites="$fn $existing_sites"
+    fi
+  done
+
+  if [[ -n "${existing_sites// /}" ]]; then
+    echo ""
+    log_warn "Existing OpenKERN installation detected in this AWS account:"
+    for fn in $existing_sites; do
+      echo "    - $fn"
+    done
+    echo ""
+    log_warn "The Starter plan includes one installation per account."
+    log_warn "Running the installer again will share the same database."
+    log_warn "For multiple installations, use separate AWS accounts or"
+    log_warn "contact enterprise@kern.technology for a Professional plan."
+    echo ""
+    local continue_choice
+    read -r -p "$(echo -e "${BOLD}Continue anyway? (yes/no)${NC} [no]: ")" continue_choice < /dev/tty
+    if [[ "$continue_choice" != "yes" && "$continue_choice" != "y" ]]; then
+      log_info "Aborted. To remove the existing installation, run:"
+      echo "    curl -fsSL https://install.openkern.org/cleanup.sh | bash"
+      exit 0
+    fi
+  fi
   echo ""
 }
 
