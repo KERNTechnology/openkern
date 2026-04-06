@@ -350,8 +350,16 @@ deploy() {
   local WORK_DIR
   WORK_DIR="$(pwd)/$PROJECT_NAME"
   if [[ -d "$WORK_DIR" ]]; then
-    log_error "Directory $PROJECT_NAME already exists. Remove it or choose a different name."
-    exit 1
+    log_warn "Directory $PROJECT_NAME already exists."
+    local overwrite
+    read -r -p "$(echo -e "${BOLD}Overwrite and start fresh? (yes/no)${NC} [no]: ")" overwrite < /dev/tty
+    if [[ "$overwrite" == "yes" || "$overwrite" == "y" ]]; then
+      rm -rf "$WORK_DIR"
+      log_ok "Removed existing directory."
+    else
+      log_info "Aborted. Remove the directory manually or choose a different project name."
+      exit 0
+    fi
   fi
 
   if [[ -n "$LOCAL_REPO" ]]; then
