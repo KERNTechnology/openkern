@@ -449,6 +449,10 @@ EOL
   # 8. Run Payload migrations
   log_info "Running database migrations..."
   cd "$WORK_DIR/packages/cms"
+  if [[ ! -d "src/migrations" ]] || [[ -z "$(ls -A src/migrations/ 2>/dev/null)" ]]; then
+    log_info "Generating initial migration..."
+    NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate:create initial
+  fi
   NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate
 
   # 8b. Seed demo content
