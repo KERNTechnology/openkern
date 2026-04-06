@@ -156,6 +156,7 @@ prompt_kern_token() {
   local secret_value
   secret_value=$(aws secretsmanager get-secret-value \
     --secret-id openkern/config \
+    --region eu-central-1 \
     --query SecretString --output text 2>/dev/null) || true
 
   if [[ -n "$secret_value" ]]; then
@@ -170,7 +171,7 @@ prompt_kern_token() {
       echo "  - Contains:     Your KERN API token (encrypted at rest)"
       echo "  - Stored by:    You, during registration"
       echo "  - Cost:         ~\$0.40/month (AWS Secrets Manager)"
-      echo "  - Delete with:  aws secretsmanager delete-secret --secret-id openkern/config"
+      echo "  - Delete with:  aws secretsmanager delete-secret --secret-id openkern/config --region eu-central-1"
       echo ""
       log_info "Using API token from your Secrets Manager..."
     fi
@@ -455,11 +456,11 @@ EOL
         log_ok "Secret openkern/config deleted."
       else
         log_warn "Could not delete secret. You can do it manually:"
-        log_warn "  aws secretsmanager delete-secret --secret-id openkern/config"
+        log_warn "  aws secretsmanager delete-secret --secret-id openkern/config --region eu-central-1"
       fi
     else
       log_info "Secret kept. Delete it anytime with:"
-      log_info "  aws secretsmanager delete-secret --secret-id openkern/config"
+      log_info "  aws secretsmanager delete-secret --secret-id openkern/config --region eu-central-1"
     fi
   fi
 
