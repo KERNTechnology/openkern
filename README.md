@@ -51,6 +51,46 @@ curl -fsSL https://install.openkern.org/install.sh | bash
 
 The installer deploys Lambda + S3 + CloudFront on your AWS account and connects to the KERN managed database. No VPC, no NAT gateway, no database setup required.
 
+### Redeploy
+
+After making changes to your CMS or templates:
+
+```bash
+cd packages/installer && ./deploy.sh
+```
+
+This rebuilds Next.js with OpenNext, uploads to Lambda + S3, and invalidates CloudFront.
+
+### Cleanup & Uninstall
+
+**Scan** what OpenKERN created on your account:
+
+```bash
+curl -fsSL https://install.openkern.org/cleanup.sh | bash
+```
+
+**Remove** a specific installation:
+
+```bash
+./cleanup.sh --destroy --site my-site
+```
+
+**Remove everything** OpenKERN created:
+
+```bash
+./cleanup.sh --destroy
+```
+
+The cleanup script discovers all OpenKERN resources by tags (`Project=openkern`), handles S3 bucket emptying, CloudFront disabling, IAM policy detachment, and deletes resources in the correct dependency order. If you have multiple installations, it lists them separately and asks which one to remove.
+
+Alternatively, if you still have the Pulumi state:
+
+```bash
+cd packages/infra/pulumi/starter
+pulumi destroy
+pulumi stack rm <stack-name> --yes
+```
+
 ---
 
 ## Tiers
@@ -118,33 +158,25 @@ Custom infrastructure, dedicated support, SLAs. Contact: enterprise@kern.technol
 
 ```
 openkern/
-├── LICENSE                    # BSL 1.1
-├── README.md
-├── CONTRIBUTING.md
 ├── packages/
-│   ├── installer/             # CLI installer (shell + npx)
-│   │   ├── install.sh         # curl | bash entry point
-│   │   ├── bin/
-│   │   │   └── create-kern-app.js
-│   │   └── lib/
-│   │       ├── prompts.js     # Interactive setup dialogs
-│   │       ├── aws.js         # AWS preflight checks
-│   │       └── deploy.js      # Deployment orchestration
+│   ├── installer/             # CLI scripts
+│   │   ├── install.sh         # Main installer (curl | bash)
+│   │   ├── deploy.sh          # Build & deploy (Next.js → Lambda + S3)
+│   │   └── cleanup.sh         # Discover & remove OpenKERN resources
 │   ├── infra/                 # Infrastructure as Code (Pulumi)
 │   │   └── pulumi/
 │   │       ├── starter/       # Starter tier: Lambda + S3 + CloudFront
 │   │       └── professional/  # Pro tier: + VPC + Aurora + optional Fargate
-│   ├── cms/                   # Payload CMS configuration
+│   ├── cms/                   # Payload CMS + Next.js app
 │   │   ├── payload.config.ts
-│   │   ├── collections/       # Pages, Posts, Media, Settings
-│   │   └── plugins/
+│   │   ├── collections/       # Pages, Posts, Media, Users
+│   │   └── globals/           # Header, Footer, SiteSettings
 │   └── templates/             # Starter website templates
 │       ├── agency/            # Multi-page agency site
 │       └── landing/           # Single landing page
 └── docs/
     ├── getting-started.md
-    ├── architecture.md
-    └── aws-prerequisites.md
+    └── architecture.md
 ```
 
 ---
