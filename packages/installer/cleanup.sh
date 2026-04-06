@@ -72,12 +72,12 @@ info "Mode:        ${BOLD}${MODE}${NC}"
 
 # ── Resource Discovery ───────────────────────────────────────────────────────
 
-declare -A SITES # site_name -> resource count
+SITE_NAMES="" # newline-separated list of site names (may have duplicates)
 
 # Helper: add to site tracking
 track() {
-  local site="$1"
-  SITES["$site"]=$(( ${SITES["$site"]:-0} + 1 ))
+  SITE_NAMES="${SITE_NAMES}${1}
+"
 }
 
 header "Scanning for OpenKERN resources..."
@@ -231,8 +231,10 @@ if [[ $TOTAL -eq 0 ]]; then
 fi
 
 echo -e "  ${BOLD}Installations found:${NC}"
-for site in $(echo "${!SITES[@]}" | tr ' ' '\n' | sort); do
-  echo -e "    ${GREEN}${site}${NC} — ${SITES[$site]} resources"
+for site in $(echo "$SITE_NAMES" | sort -u); do
+  [[ -z "$site" ]] && continue
+  count=$(echo "$SITE_NAMES" | grep -cx "$site")
+  echo -e "    ${GREEN}${site}${NC} — ${count} resources"
 done
 echo ""
 echo -e "  ${BOLD}Resource breakdown:${NC}"
