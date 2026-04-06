@@ -9,7 +9,8 @@
 // Uses the Payload Local API — no HTTP server required.
 
 import type { Payload } from "payload";
-import type { ThemeName } from "@/themes/types";
+
+type ThemeName = "minimal" | "bold" | "corporate";
 
 /* ---------------------------------------------------------------------------
    Helpers
@@ -1319,3 +1320,16 @@ export async function seed(
 }
 
 export default seed;
+
+// Auto-execute when called via `payload run src/seed/index.ts`
+import { getPayload } from "payload";
+import config from "@payload-config";
+
+const run = async () => {
+  const payload = await getPayload({ config });
+  await seed(payload);
+  payload.logger.info("Seed complete. Exiting.");
+  process.exit(0);
+};
+
+await run();
