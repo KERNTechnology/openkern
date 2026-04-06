@@ -4,6 +4,8 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { getThemeComponents, isValidTheme } from '@/themes'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Blog',
   description:

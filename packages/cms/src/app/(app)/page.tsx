@@ -5,6 +5,8 @@ import configPromise from '@payload-config'
 import { getThemeComponents, isValidTheme } from '@/themes'
 import { BlockRenderer } from './components/BlockRenderer'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const payload = await getPayload({ config: configPromise })

@@ -4,6 +4,8 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
+
+export const dynamic = 'force-dynamic'
 import { getThemeComponents, isValidTheme } from '@/themes'
 import { BlockRenderer } from '../components/BlockRenderer'
 
