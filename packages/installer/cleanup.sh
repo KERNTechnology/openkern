@@ -214,14 +214,19 @@ for fn_entry in ${LAMBDAS[@]+"${LAMBDAS[@]}"}; do
 done
 
 # --- Secrets Manager ---
+# The openkern/config secret is shared across all installations.
+# Only include it when deleting ALL installations (no --site filter).
 SECRETS=()
-info "Checking Secrets Manager..."
-SECRET_LIST=$(aws secretsmanager list-secrets --region "$REGION" --filters Key=name,Values=openkern --query "SecretList[].{Name:Name,ARN:ARN}" --output text 2>/dev/null || true)
-if [[ -n "$SECRET_LIST" ]]; then
-  while IFS=$'\t' read -r name arn; do
-    SECRETS+=("$name|$arn")
-    echo "  Secret      $name"
-  done <<< "$SECRET_LIST"
+if [[ -z "$SITE_FILTER" ]]; then
+  info "Checking Secrets Manager..."
+  SECRET_LIST=$(aws secretsmanager list-secrets --region "$REGION" --filters Key=name,Values=openkern --query "SecretList[].{Name:Name,ARN:ARN}" --output text 2>/dev/null || true)
+  if [[ -n "$SECRET_LIST" ]]; then
+    while IFS=$'\t' read -r name arn; do
+      [[ -z "$name" || "$name" == "None" ]] && continue
+      SECRETS+=("$name|$arn")
+      echo "  Secret      $name  (shared across all installations)"
+    done <<< "$SECRET_LIST"
+  fi
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────
@@ -253,10 +258,23 @@ echo "    Secrets:                  ${#SECRETS[@]}"
 echo "    ─────────────────────────────"
 echo -e "    ${BOLD}Total: ${TOTAL} resources${NC}"
 
+# Count unique installations
+UNIQUE_SITES=$(echo "$SITE_NAMES" | sort -u | grep -c . || true)
+
 if [[ "$MODE" == "scan" ]]; then
   echo ""
   info "This was a scan only. To remove these resources, run:"
-  if [[ -n "$SITE_FILTER" ]]; then
+  if [[ "$UNIQUE_SITES" -gt 1 && -z "$SITE_FILTER" ]]; then
+    echo ""
+    warn "Multiple installations found. Use --site to target a specific one:"
+    for site in $(echo "$SITE_NAMES" | sort -u); do
+      [[ -z "$site" ]] && continue
+      echo -e "    ${BOLD}./cleanup.sh --destroy --site ${site}${NC}"
+    done
+    echo ""
+    echo -e "  Or to remove everything:"
+    echo -e "    ${BOLD}./cleanup.sh --destroy${NC}"
+  elif [[ -n "$SITE_FILTER" ]]; then
     echo -e "    ${BOLD}./cleanup.sh --destroy --site ${SITE_FILTER}${NC}"
   else
     echo -e "    ${BOLD}./cleanup.sh --destroy${NC}"
@@ -267,6 +285,20 @@ fi
 # ── Destroy Mode ─────────────────────────────────────────────────────────────
 
 header "DESTROY MODE"
+
+# Safety: require --site when multiple installations exist
+if [[ "$UNIQUE_SITES" -gt 1 && -z "$SITE_FILTER" && "$SKIP_CONFIRM" != true ]]; then
+  warn "Found ${UNIQUE_SITES} installations. To avoid accidental deletion,"
+  warn "use --site to target a specific one:"
+  echo ""
+  for site in $(echo "$SITE_NAMES" | sort -u); do
+    [[ -z "$site" ]] && continue
+    echo -e "    ${BOLD}./cleanup.sh --destroy --site ${site}${NC}"
+  done
+  echo ""
+  warn "To destroy ALL installations, pass --yes to confirm."
+  exit 1
+fi
 
 if [[ "$SKIP_CONFIRM" != true ]]; then
   warn "This will permanently delete ${TOTAL} resources in account ${ACCOUNT_ID}."
