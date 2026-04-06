@@ -290,21 +290,9 @@ prompt_project() {
 }
 
 prompt_admin() {
-  echo -e "${BOLD}Payload CMS Admin Account${NC}"
-  echo "─────────────────────────────────────────────"
-  echo ""
-
-  ADMIN_EMAIL=$(prompt_value "Admin email" "")
-  read -r -s -p "$(echo -e "${BOLD}Admin password${NC} (min. 8 characters): ")" ADMIN_PASSWORD < /dev/tty
-  echo ""
-
-  while [ ${#ADMIN_PASSWORD} -lt 8 ]; do
-    log_warn "Password must be at least 8 characters."
-    read -r -s -p "$(echo -e "${BOLD}Admin password${NC}: ")" ADMIN_PASSWORD < /dev/tty
-    echo ""
-  done
-
-  echo ""
+  # Admin user is created via Payload's built-in first-user screen at /admin.
+  # No prompts needed — the customer sets email/password on first visit.
+  true
 }
 
 confirm() {
@@ -314,7 +302,6 @@ confirm() {
   echo "  Project:     $PROJECT_NAME"
   echo "  Theme:       $TEMPLATE"
   echo "  AWS Region:  $AWS_REGION"
-  echo "  Admin:       $ADMIN_EMAIL"
   echo "  Database:    KERN Managed (automatic)"
   echo ""
 
@@ -460,27 +447,8 @@ EOL
   OPENKERN_THEME="$TEMPLATE" NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload run src/seed/index.ts
   log_ok "Demo content created."
 
-  # 9. Create initial admin user via Payload
-  log_info "Creating admin user..."
-
-  local SERVER_URL="${CF_URL}"
-
-  # Wait for Lambda cold start
-  sleep 5
-
-  # Create admin user via Payload REST API (first-register endpoint)
-  local REGISTER_RESPONSE
-  REGISTER_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-    "${SERVER_URL}api/users/first-register" \
-    -H "Content-Type: application/json" \
-    -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}" 2>/dev/null) || true
-
-  if [[ "$REGISTER_RESPONSE" == "200" || "$REGISTER_RESPONSE" == "201" ]]; then
-    log_ok "Admin user created."
-  else
-    log_warn "Could not auto-create admin user (HTTP $REGISTER_RESPONSE)."
-    log_warn "Visit ${ADMIN_URL} to create your first admin account manually."
-  fi
+  # 9. Admin user — created by customer on first visit to /admin
+  log_ok "Infrastructure deployed and demo content seeded."
 
   # Offer to clean up Secrets Manager secret (no longer needed)
   if [[ "$KERN_USED_SECRET" == "true" ]]; then
@@ -518,7 +486,8 @@ EOL
   echo ""
   echo "  Site URL:    $SITE_URL"
   echo "  Admin:       $ADMIN_URL"
-  echo "  Email:       $ADMIN_EMAIL"
+  echo ""
+  echo "  Create your admin account by visiting the Admin URL above."
   echo ""
   echo ""
   echo "  To redeploy after changes:"
