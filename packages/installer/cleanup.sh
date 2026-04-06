@@ -289,7 +289,7 @@ for entry in ${DISTRIBUTIONS[@]+"${DISTRIBUTIONS[@]}"}; do
     if echo "$CONFIG" | python3 -c "import sys,json; c=json.load(sys.stdin); print('yes' if c.get('Enabled') else 'no')" 2>/dev/null | grep -q "yes"; then
       DISABLED_CONFIG=$(echo "$CONFIG" | python3 -c "import sys,json; c=json.load(sys.stdin); c['Enabled']=False; json.dump(c,sys.stdout)")
       aws cloudfront update-distribution --id "$id" --if-match "$ETAG" --distribution-config "$DISABLED_CONFIG" --output text >/dev/null 2>&1 || true
-      info "Waiting for distribution $id to deploy (this can take a few minutes)..."
+      info "Waiting for distribution $id to disable (this can take a few minutes)..."
       aws cloudfront wait distribution-deployed --id "$id" 2>/dev/null || {
         warn "CloudFront $id still deploying. You may need to delete it manually later."
         continue
