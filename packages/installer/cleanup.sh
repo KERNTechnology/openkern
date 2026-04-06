@@ -109,7 +109,7 @@ if [[ "$CF_TAGGED" != "[]" ]]; then
   while IFS= read -r arn; do
     id=$(echo "$arn" | grep -o '[^/]*$')
     # Skip if already found
-    if printf '%s\n' "${DISTRIBUTIONS[@]}" | grep -q "^${id}|" 2>/dev/null; then
+    if printf '%s\n' ${DISTRIBUTIONS[@]+"${DISTRIBUTIONS[@]}"} | grep -q "^${id}|" 2>/dev/null; then
       continue
     fi
     site=$(aws resourcegroupstaggingapi get-resources \
@@ -198,7 +198,7 @@ done
 # --- CloudWatch Log Groups ---
 LOGGROUPS=()
 info "Checking CloudWatch log groups..."
-for fn_entry in "${LAMBDAS[@]}"; do
+for fn_entry in ${LAMBDAS[@]+"${LAMBDAS[@]}"}; do
   fn="${fn_entry%%|*}"
   site="${fn_entry#*|}"
   lg="/aws/lambda/$fn"
@@ -277,7 +277,7 @@ fi
 # Order matters: CloudFront → API GW → Lambda → S3 → IAM → Logs → Secrets
 
 # 1. Disable and delete CloudFront distributions
-for entry in "${DISTRIBUTIONS[@]}"; do
+for entry in ${DISTRIBUTIONS[@]+"${DISTRIBUTIONS[@]}"}; do
   IFS='|' read -r id site domain status <<< "$entry"
   info "Disabling CloudFront distribution $id ($site)..."
 
@@ -305,7 +305,7 @@ for entry in "${DISTRIBUTIONS[@]}"; do
 done
 
 # 2. Delete API Gateways
-for entry in "${APIS[@]}"; do
+for entry in ${APIS[@]+"${APIS[@]}"}; do
   IFS='|' read -r id site name <<< "$entry"
   info "Deleting API Gateway $id ($name)..."
   # Delete stages first
@@ -320,7 +320,7 @@ for entry in "${APIS[@]}"; do
 done
 
 # 3. Delete Lambda functions
-for entry in "${LAMBDAS[@]}"; do
+for entry in ${LAMBDAS[@]+"${LAMBDAS[@]}"}; do
   IFS='|' read -r fn site <<< "$entry"
   info "Deleting Lambda function $fn..."
   aws lambda delete-function --function-name "$fn" --region "$REGION" 2>/dev/null && \
@@ -329,7 +329,7 @@ for entry in "${LAMBDAS[@]}"; do
 done
 
 # 4. Empty and delete S3 buckets
-for entry in "${BUCKETS[@]}"; do
+for entry in ${BUCKETS[@]+"${BUCKETS[@]}"}; do
   IFS='|' read -r bucket site obj_count <<< "$entry"
   info "Emptying S3 bucket $bucket ($obj_count objects)..."
 
@@ -352,7 +352,7 @@ for entry in "${BUCKETS[@]}"; do
 done
 
 # 5. Delete IAM roles (must detach policies first)
-for entry in "${ROLES[@]}"; do
+for entry in ${ROLES[@]+"${ROLES[@]}"}; do
   IFS='|' read -r role site <<< "$entry"
   info "Cleaning up IAM role $role..."
 
@@ -374,7 +374,7 @@ for entry in "${ROLES[@]}"; do
 done
 
 # 6. Delete CloudWatch log groups
-for entry in "${LOGGROUPS[@]}"; do
+for entry in ${LOGGROUPS[@]+"${LOGGROUPS[@]}"}; do
   IFS='|' read -r lg site <<< "$entry"
   info "Deleting log group $lg..."
   aws logs delete-log-group --log-group-name "$lg" --region "$REGION" 2>/dev/null && \
@@ -383,7 +383,7 @@ for entry in "${LOGGROUPS[@]}"; do
 done
 
 # 7. Delete Secrets Manager secrets
-for entry in "${SECRETS[@]}"; do
+for entry in ${SECRETS[@]+"${SECRETS[@]}"}; do
   IFS='|' read -r name arn <<< "$entry"
   info "Deleting secret $name..."
   aws secretsmanager delete-secret --secret-id "$name" --force-delete-without-recovery --region "$REGION" 2>/dev/null && \
