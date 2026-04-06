@@ -17,6 +17,7 @@ credentials.json
 dist/
 .next/
 .open-next/
+*.tsbuildinfo
 
 # OS
 .DS_Store
