@@ -272,9 +272,9 @@ prompt_project() {
   echo ""
 
   echo "Theme:"
-  echo "  [1] Minimal    — clean, modern, generous whitespace"
-  echo "  [2] Bold       — dark, dynamic, gradients"
-  echo "  [3] Corporate  — professional, structured, trustworthy"
+  echo "  [1] Starter      — One-Pager mit Anleitung, ideal zum Kennenlernen"
+  echo "  [2] Bold         — Dark, dynamisch, Agentur-Demo (Schönberg Digital)"
+  echo "  [3] Professional — Mehrere Unterseiten, Blog, Team — mit Erklärungen"
   echo ""
   local theme_choice
   theme_choice=$(prompt_value "Choose theme" "1")

@@ -56,7 +56,8 @@ export default async function HomePage() {
     )
   }
 
-  const blocks = ((page as Record<string, unknown>).layout as Array<{ blockType: string; [k: string]: unknown }>) || []
+  // eslint-disable-next-line
+  const blocks = ((page as any).layout as Array<{ blockType: string; [k: string]: unknown }>) || []
 
   if (blocks.length > 0) {
     return <BlockRenderer blocks={blocks} components={components} />

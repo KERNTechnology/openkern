@@ -59,8 +59,9 @@ export default async function PageRoute({
   const themeName = isValidTheme(settings?.theme) ? settings.theme : 'minimal'
   const components = getThemeComponents(themeName)
 
+  // eslint-disable-next-line
   const blocks =
-    ((page as Record<string, unknown>).layout as Array<{
+    ((page as any).layout as Array<{
       blockType: string
       [k: string]: unknown
     }>) || []

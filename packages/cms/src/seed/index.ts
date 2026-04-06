@@ -1,7 +1,8 @@
 // FILE: packages/cms/src/seed/index.ts
 //
-// Seed script that populates a fresh OpenKERN deployment with demo content
-// for a fictional boutique agency called "Schoenberg Digital".
+// Seed script that populates a fresh OpenKERN deployment with demo content.
+// Content is theme-aware: "minimal" (one-pager), "corporate" (multi-page),
+// or "bold" (Schoenberg Digital agency showcase).
 //
 // Called via:  payload run src/seed/index.ts   (or imported programmatically)
 //
@@ -49,7 +50,8 @@ function heading(tag: "h1" | "h2" | "h3" | "h4", text: string) {
 }
 
 /** Wrap children in a Lexical root structure. */
-function lexicalRoot(children: Record<string, unknown>[]) {
+// eslint-disable-next-line
+function lexicalRoot(children: Record<string, unknown>[]): any {
   return {
     root: {
       type: "root",
@@ -62,17 +64,742 @@ function lexicalRoot(children: Record<string, unknown>[]) {
   };
 }
 
-/* ---------------------------------------------------------------------------
-   Seed: Pages
-   -------------------------------------------------------------------------- */
+/** Stagger publish dates for posts. */
+function makeDateHelper(base: Date = new Date("2026-03-15T10:00:00Z")) {
+  return (daysAgo: number) =>
+    new Date(base.getTime() - daysAgo * 86_400_000).toISOString();
+}
 
-async function seedPages(payload: Payload): Promise<void> {
+/* ===========================================================================
+   THEME: minimal — Starter One-Pager
+   =========================================================================== */
+
+async function seedMinimalPages(payload: Payload): Promise<void> {
   if (!(await collectionIsEmpty(payload, "pages"))) {
     payload.logger.info("-- Pages collection is not empty, skipping.");
     return;
   }
 
-  payload.logger.info("-- Seeding Pages...");
+  payload.logger.info("-- Seeding Pages (minimal)...");
+
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Startseite",
+      slug: "home",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      layout: [
+        {
+          blockType: "hero",
+          headline: "Willkommen auf Ihrer neuen Website",
+          subheadline:
+            "Dies ist Ihre OpenKERN-Website. Sie sehen gerade das Starter-Theme — eine Einseiter-Vorlage, die Ihnen zeigt, wie alles funktioniert. Bearbeiten Sie diese Inhalte im Admin-Panel unter /admin.",
+          primaryCta: { label: "Admin-Panel öffnen", url: "/admin" },
+          secondaryCta: { label: "So funktioniert's", url: "#leistungen" },
+        },
+        {
+          blockType: "services",
+          headline: "So bearbeiten Sie Ihre Website",
+          subheadline:
+            "Jeder dieser Blöcke kann im Admin-Panel angepasst werden. Gehen Sie zu Seiten → Startseite → Layout.",
+          services: [
+            {
+              title: "Seiten bearbeiten",
+              description:
+                "Öffnen Sie /admin und klicken Sie auf 'Seiten'. Hier finden Sie alle Ihre Seiten. Jede Seite hat einen Titel, einen Slug (URL-Pfad) und Inhaltsblöcke, die Sie per Drag & Drop anordnen können.",
+              icon: "pen-tool",
+            },
+            {
+              title: "Blog-Beiträge erstellen",
+              description:
+                "Unter 'Posts' im Admin-Panel können Sie Blog-Artikel verfassen. Jeder Beitrag hat einen Titel, eine Kategorie, ein Vorschaubild und einen Rich-Text-Editor für den Inhalt.",
+              icon: "megaphone",
+            },
+            {
+              title: "Medien verwalten",
+              description:
+                "Alle Bilder und Dokumente werden unter 'Media' verwaltet und auf Ihrem eigenen AWS S3-Bucket gespeichert. Laden Sie Bilder hoch und verwenden Sie sie in Ihren Seiten und Beiträgen.",
+              icon: "palette",
+            },
+            {
+              title: "Einstellungen anpassen",
+              description:
+                "Unter 'Settings' finden Sie die globalen Einstellungen: Website-Name, Beschreibung, Theme-Auswahl, Navigation und Footer. Änderungen werden sofort live.",
+              icon: "chart",
+            },
+          ],
+        },
+        {
+          blockType: "portfolio",
+          headline: "Beispiel-Projekte",
+          subheadline:
+            "Dieser Block zeigt ein Portfolio-Raster. Ersetzen Sie diese Beispiele mit Ihren eigenen Projekten im Admin-Panel unter Seiten → Startseite → Layout → Portfolio.",
+          items: [
+            {
+              title: "Projekt Alpha",
+              description:
+                "Dies ist ein Beispiel-Projekt. Bearbeiten Sie Titel, Beschreibung und Bild im Admin-Panel.",
+              image: null,
+            },
+            {
+              title: "Projekt Beta",
+              description:
+                "Fügen Sie einen Link hinzu, um Besucher zu einer Detailseite oder einer externen URL zu leiten.",
+              image: null,
+            },
+            {
+              title: "Projekt Gamma",
+              description:
+                "Sie können bis zu 6 Projekte in diesem Block anzeigen. Löschen Sie diese Beispiele und fügen Sie Ihre eigenen hinzu.",
+              image: null,
+            },
+          ],
+        },
+        {
+          blockType: "testimonials",
+          headline: "Kundenstimmen",
+          testimonials: [
+            {
+              quote:
+                "Dies ist ein Beispiel-Zitat. Ersetzen Sie es mit echtem Feedback Ihrer Kunden. Authentische Stimmen schaffen Vertrauen.",
+              author: "Max Mustermann",
+              role: "Geschäftsführer",
+              company: "Beispiel GmbH",
+            },
+            {
+              quote:
+                "Fügen Sie so viele Testimonials hinzu, wie Sie möchten. Jedes Zitat besteht aus dem Text, dem Autor, seiner Rolle und dem Unternehmen.",
+              author: "Erika Musterfrau",
+              role: "Marketing-Leiterin",
+              company: "Demo AG",
+            },
+          ],
+        },
+        {
+          blockType: "cta",
+          headline: "Bereit, loszulegen?",
+          description:
+            "Öffnen Sie das Admin-Panel und ersetzen Sie diese Demo-Inhalte mit Ihren eigenen. Bei Fragen: support@kern.technology",
+          buttonLabel: "Zum Admin-Panel",
+          buttonUrl: "/admin",
+        },
+      ],
+      meta: {
+        title: "Meine Website — Erstellt mit OpenKERN",
+        description:
+          "Ihre neue Website mit OpenKERN. Bearbeiten Sie alle Inhalte im Admin-Panel.",
+      },
+    },
+  });
+
+  payload.logger.info("   1 page created.");
+}
+
+async function seedMinimalPosts(payload: Payload): Promise<void> {
+  if (!(await collectionIsEmpty(payload, "posts"))) {
+    payload.logger.info("-- Posts collection is not empty, skipping.");
+    return;
+  }
+
+  payload.logger.info("-- Seeding Posts (minimal)...");
+
+  const daysAgo = makeDateHelper();
+
+  // Post 1: How to create your first blog post
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "So erstellen Sie Ihren ersten Blog-Beitrag",
+      slug: "erster-blog-beitrag",
+      _status: "published",
+      publishedAt: daysAgo(0),
+      category: "blog",
+      excerpt:
+        "Eine kurze Anleitung, wie Sie im Admin-Panel neue Blog-Beiträge verfassen und veröffentlichen.",
+      content: lexicalRoot([
+        heading("h2", "Ihr erster Blog-Beitrag in 5 Schritten"),
+        paragraph(
+          "Einen neuen Blog-Beitrag zu erstellen ist unkompliziert. Folgen Sie diesen Schritten und Ihr erster Artikel ist in wenigen Minuten online.",
+        ),
+        heading("h3", "1. Admin-Panel öffnen"),
+        paragraph(
+          "Navigieren Sie zu /admin in Ihrem Browser. Falls Sie noch nicht eingeloggt sind, melden Sie sich mit Ihren Zugangsdaten an.",
+        ),
+        heading("h3", "2. Neuen Beitrag anlegen"),
+        paragraph(
+          "Klicken Sie in der Seitenleiste auf 'Posts' und dann auf 'Create New'. Sie sehen jetzt den Editor für einen neuen Beitrag.",
+        ),
+        heading("h3", "3. Felder ausfüllen"),
+        paragraph(
+          "Geben Sie einen Titel ein — der Slug (URL-Pfad) wird automatisch generiert. Wählen Sie eine Kategorie, schreiben Sie einen kurzen Auszug (Excerpt) und verfassen Sie Ihren Inhalt im Rich-Text-Editor.",
+        ),
+        heading("h3", "4. Vorschaubild hinzufügen"),
+        paragraph(
+          "Laden Sie unter 'Hero Image' ein Bild hoch, das als Vorschaubild in der Blog-Übersicht und als Header im Beitrag angezeigt wird.",
+        ),
+        heading("h3", "5. Veröffentlichen"),
+        paragraph(
+          "Ändern Sie den Status oben rechts von 'Draft' auf 'Published' und klicken Sie auf 'Save'. Ihr Beitrag ist jetzt live unter /blog/[slug] erreichbar.",
+        ),
+      ]),
+      meta: {
+        title: "So erstellen Sie Ihren ersten Blog-Beitrag",
+        description:
+          "Schritt-für-Schritt-Anleitung zum Erstellen und Veröffentlichen von Blog-Beiträgen in OpenKERN.",
+      },
+    },
+  });
+
+  // Post 2: Tips for good website content
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "Tipps für gute Website-Inhalte",
+      slug: "tipps-website-inhalte",
+      _status: "published",
+      publishedAt: daysAgo(3),
+      category: "blog",
+      excerpt:
+        "Praktische Tipps für Texte, Bilder und Struktur, die bei Ihren Besuchern ankommen.",
+      content: lexicalRoot([
+        heading("h2", "So schreiben Sie Inhalte, die ankommen"),
+        paragraph(
+          "Gute Website-Inhalte sind kein Zufall. Mit ein paar einfachen Grundregeln wird Ihre Website überzeugender, klarer und angenehmer zu lesen.",
+        ),
+        heading("h3", "Überschriften, die neugierig machen"),
+        paragraph(
+          "Ihre Überschrift ist das Erste, was Besucher sehen. Formulieren Sie sie so, dass sofort klar wird, worum es geht — und warum es relevant ist. Vermeiden Sie generische Titel wie 'Herzlich willkommen'. Sagen Sie stattdessen, was Sie besonders macht.",
+        ),
+        heading("h3", "Kurze Absätze, klare Sprache"),
+        paragraph(
+          "Lange Textblöcke schrecken ab. Halten Sie Absätze bei 2-3 Sätzen. Verwenden Sie einfache, direkte Sprache. Schreiben Sie so, wie Sie mit einem Kunden sprechen würden — professionell, aber nicht steif.",
+        ),
+        heading("h3", "Call-to-Actions nicht vergessen"),
+        paragraph(
+          "Jede Seite sollte ein Ziel haben. Was soll der Besucher als Nächstes tun? Kontakt aufnehmen? Einen Beitrag lesen? Ein Produkt ansehen? Machen Sie es mit einem klaren Call-to-Action-Button deutlich.",
+        ),
+        heading("h3", "Bilder mit Bedacht einsetzen"),
+        paragraph(
+          "Gute Bilder werten Ihre Seite auf, schlechte ziehen sie herunter. Verwenden Sie hochwertige Fotos und achten Sie auf passende Dateigrößen. OpenKERN optimiert Bilder automatisch, aber das Ausgangsmaterial sollte stimmen.",
+        ),
+      ]),
+      meta: {
+        title: "Tipps für gute Website-Inhalte",
+        description:
+          "Praktische Tipps für Texte, Bilder und Struktur — so erstellen Sie Website-Inhalte, die überzeugen.",
+      },
+    },
+  });
+
+  payload.logger.info("   2 posts created.");
+}
+
+async function seedMinimalGlobals(
+  payload: Payload,
+  theme: ThemeName,
+): Promise<void> {
+  payload.logger.info("-- Seeding globals (minimal)...");
+
+  await payload.updateGlobal({
+    slug: "header",
+    data: {
+      navItems: [
+        { label: "Startseite", url: "/" },
+        { label: "Blog", url: "/blog" },
+      ],
+      ctaButton: {
+        enabled: true,
+        label: "Admin-Panel",
+        url: "/admin",
+      },
+    },
+  });
+
+  await payload.updateGlobal({
+    slug: "footer",
+    data: {
+      columns: [
+        {
+          heading: "OpenKERN",
+          links: [
+            { label: "Admin-Panel", url: "/admin" },
+            {
+              label: "Dokumentation",
+              url: "https://github.com/nice-solutions/openkern",
+            },
+            {
+              label: "Support",
+              url: "mailto:support@kern.technology",
+            },
+          ],
+        },
+      ],
+      copyright: "Erstellt mit OpenKERN",
+    },
+  });
+
+  await payload.updateGlobal({
+    slug: "site-settings",
+    data: {
+      theme,
+      siteName: "Meine Website",
+      siteDescription:
+        "Erstellt mit OpenKERN — bearbeiten Sie diese Einstellung im Admin-Panel unter Settings.",
+    },
+  });
+}
+
+/* ===========================================================================
+   THEME: corporate — Professional Multi-Page
+   =========================================================================== */
+
+async function seedCorporatePages(payload: Payload): Promise<void> {
+  if (!(await collectionIsEmpty(payload, "pages"))) {
+    payload.logger.info("-- Pages collection is not empty, skipping.");
+    return;
+  }
+
+  payload.logger.info("-- Seeding Pages (corporate)...");
+
+  // Homepage
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Startseite",
+      slug: "home",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      layout: [
+        {
+          blockType: "hero",
+          headline: "Ihre professionelle Website mit OpenKERN",
+          subheadline:
+            "Sie sehen das Professional-Theme mit mehreren Unterseiten. Jede Seite erklärt sich selbst — so lernen Sie Ihr CMS kennen, während Sie es nutzen.",
+          primaryCta: { label: "Leistungen entdecken", url: "/leistungen" },
+          secondaryCta: { label: "Admin-Panel", url: "/admin" },
+        },
+        {
+          blockType: "services",
+          headline: "Was diese Website kann",
+          subheadline:
+            "OpenKERN gibt Ihnen alle Werkzeuge für einen professionellen Webauftritt.",
+          services: [
+            {
+              title: "Mehrere Seiten",
+              description:
+                "Erstellen Sie beliebig viele Unterseiten — Leistungen, Über uns, Kontakt, Team. Jede Seite hat ihren eigenen URL-Pfad und kann individuell gestaltet werden.",
+              icon: "globe",
+            },
+            {
+              title: "Blog & News",
+              description:
+                "Veröffentlichen Sie regelmäßig Artikel, um bei Google gefunden zu werden. Der Blog ist bereits eingerichtet und wartet auf Ihre ersten Beiträge.",
+              icon: "megaphone",
+            },
+            {
+              title: "Flexible Layouts",
+              description:
+                "Kombinieren Sie verschiedene Inhaltsblöcke: Hero, Leistungen, Portfolio, Testimonials, Call-to-Action und Freitext. Per Drag & Drop im Admin-Panel.",
+              icon: "code",
+            },
+            {
+              title: "Responsive Design",
+              description:
+                "Ihre Website sieht auf Desktop, Tablet und Smartphone gleich gut aus. Das Theme passt sich automatisch an jede Bildschirmgröße an.",
+              icon: "zap",
+            },
+          ],
+        },
+        {
+          blockType: "testimonials",
+          headline: "Das sagen unsere Nutzer",
+          testimonials: [
+            {
+              quote:
+                "Endlich ein CMS, das modern ist und auf unserer eigenen Infrastruktur läuft. Kein WordPress mehr!",
+              author: "Anna Berger",
+              role: "Inhaberin",
+              company: "Berger Design Studio",
+            },
+            {
+              quote:
+                "Die Installation hat 20 Minuten gedauert. Danach hatten wir eine fertige Website mit Blog und CMS. Beeindruckend.",
+              author: "Thomas Keller",
+              role: "Freelance Developer",
+              company: "",
+            },
+            {
+              quote:
+                "Für unsere Agentur genau das Richtige — wir können Kundenprojekte jetzt viel schneller umsetzen.",
+              author: "Lena Widmer",
+              role: "Creative Director",
+              company: "Studio Widmer",
+            },
+          ],
+        },
+        {
+          blockType: "cta",
+          headline: "Entdecken Sie die Unterseiten",
+          description:
+            "Klicken Sie sich durch die Navigation — jede Seite erklärt, wie Sie sie anpassen können.",
+          buttonLabel: "Leistungen ansehen",
+          buttonUrl: "/leistungen",
+        },
+      ],
+      meta: {
+        title: "Mein Unternehmen — Professionelle Website mit OpenKERN",
+        description:
+          "Professionelle Website erstellt mit OpenKERN. Bearbeiten Sie alle Inhalte im Admin-Panel.",
+      },
+    },
+  });
+
+  // Leistungen
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Leistungen",
+      slug: "leistungen",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      content: lexicalRoot([
+        heading("h2", "Ihre Leistungen-Seite"),
+        paragraph(
+          "Dies ist eine Beispiel-Seite für Ihre Leistungen oder Services. Im Admin-Panel unter Seiten → Leistungen können Sie diese Inhalte bearbeiten.",
+        ),
+        heading("h3", "So passen Sie diese Seite an"),
+        paragraph(
+          "Ersetzen Sie diesen Text mit Ihren eigenen Leistungen. Beschreiben Sie, was Sie anbieten, für wen, und was Sie von der Konkurrenz unterscheidet.",
+        ),
+        heading("h3", "Tipp: Layout-Blöcke verwenden"),
+        paragraph(
+          "Sie können diese Seite auch mit Layout-Blöcken gestalten statt mit Freitext. Bearbeiten Sie die Seite im Admin-Panel und fügen Sie unter 'Layout' einen Services-Block hinzu.",
+        ),
+      ]),
+      meta: {
+        title: "Leistungen | Mein Unternehmen",
+        description:
+          "Unsere Leistungen im Überblick. Bearbeiten Sie diese Seite im Admin-Panel.",
+      },
+    },
+  });
+
+  // Ueber uns
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Über uns",
+      slug: "ueber-uns",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      content: lexicalRoot([
+        heading("h2", "Ihre Über-uns-Seite"),
+        paragraph(
+          "Hier stellen Sie sich und Ihr Team vor. Erzählen Sie Ihre Geschichte — wer Sie sind, was Sie antreibt, und warum Kunden mit Ihnen arbeiten sollten.",
+        ),
+        heading("h3", "Was gehört auf eine gute Über-uns-Seite?"),
+        paragraph(
+          "Ihre Geschichte, Ihre Werte, Ihr Team. Zeigen Sie Gesichter — Menschen vertrauen Menschen, nicht Logos. Fügen Sie unter 'Media' Team-Fotos hinzu und verlinken Sie sie hier.",
+        ),
+        heading("h3", "Team-Seite erstellen"),
+        paragraph(
+          "Tipp: Erstellen Sie eine eigene Team-Seite unter Seiten → Neu. Vergeben Sie den Slug 'team' und verlinken Sie sie in der Navigation unter Settings → Header.",
+        ),
+      ]),
+      meta: {
+        title: "Über uns | Mein Unternehmen",
+        description:
+          "Lernen Sie uns kennen. Bearbeiten Sie diese Seite im Admin-Panel.",
+      },
+    },
+  });
+
+  // Kontakt
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Kontakt",
+      slug: "kontakt",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      content: lexicalRoot([
+        heading("h2", "Ihre Kontakt-Seite"),
+        paragraph(
+          "Machen Sie es Ihren Besuchern einfach, Sie zu erreichen. Zeigen Sie Ihre E-Mail-Adresse, Telefonnummer und Adresse.",
+        ),
+        heading("h3", "Kontaktformular hinzufügen"),
+        paragraph(
+          "OpenKERN enthält standardmäßig kein Kontaktformular. Sie können eines mit einem Payload-Plugin oder einem externen Service wie Formspree oder Typeform einbinden. Fragen Sie uns: support@kern.technology",
+        ),
+        paragraph(
+          "E-Mail: hello@example.com | Telefon: +49 123 456789 | Adresse: Musterstraße 1, 80331 München",
+        ),
+      ]),
+      meta: {
+        title: "Kontakt | Mein Unternehmen",
+        description:
+          "Nehmen Sie Kontakt mit uns auf. Bearbeiten Sie diese Seite im Admin-Panel.",
+      },
+    },
+  });
+
+  payload.logger.info("   4 pages created.");
+}
+
+async function seedCorporatePosts(payload: Payload): Promise<void> {
+  if (!(await collectionIsEmpty(payload, "posts"))) {
+    payload.logger.info("-- Posts collection is not empty, skipping.");
+    return;
+  }
+
+  payload.logger.info("-- Seeding Posts (corporate)...");
+
+  const daysAgo = makeDateHelper();
+
+  // Post 1: Welcome to your blog
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "Willkommen auf Ihrem neuen Blog",
+      slug: "willkommen-blog",
+      _status: "published",
+      publishedAt: daysAgo(0),
+      category: "blog",
+      excerpt:
+        "Ihr Blog ist eingerichtet und bereit für Ihre Inhalte. Hier erfahren Sie, wie er funktioniert.",
+      content: lexicalRoot([
+        heading("h2", "Ihr Blog ist startklar"),
+        paragraph(
+          "Dieser Beitrag ist einer von vier Beispiel-Artikeln, die Ihnen zeigen, wie der Blog funktioniert. Sie finden alle Beiträge im Admin-Panel unter 'Posts'.",
+        ),
+        paragraph(
+          "Ihr Blog ist unter /blog erreichbar. Neue Beiträge erscheinen automatisch in der Übersicht, sortiert nach Veröffentlichungsdatum. Jeder Beitrag hat seine eigene URL unter /blog/[slug].",
+        ),
+        heading("h3", "Was Sie mit Ihrem Blog tun können"),
+        paragraph(
+          "Ein Blog hilft Ihnen, bei Google gefunden zu werden, Ihre Expertise zu zeigen und mit Ihrer Zielgruppe in Kontakt zu bleiben. Veröffentlichen Sie regelmäßig Beiträge zu Themen, die Ihre Kunden interessieren.",
+        ),
+        paragraph(
+          "Löschen Sie diese Beispiel-Beiträge, sobald Sie Ihre eigenen Inhalte erstellt haben. Oder bearbeiten Sie sie als Vorlage für Ihre ersten Artikel.",
+        ),
+      ]),
+      meta: {
+        title: "Willkommen auf Ihrem neuen Blog",
+        description:
+          "Ihr Blog ist eingerichtet. Erfahren Sie, wie er funktioniert und wie Sie ihn nutzen.",
+      },
+    },
+  });
+
+  // Post 2: How to write your first post
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "So schreiben Sie Ihren ersten Beitrag",
+      slug: "erster-beitrag",
+      _status: "published",
+      publishedAt: daysAgo(3),
+      category: "blog",
+      excerpt:
+        "Schritt-für-Schritt-Anleitung: So erstellen und veröffentlichen Sie einen Blog-Beitrag im Admin-Panel.",
+      content: lexicalRoot([
+        heading("h2", "Einen Beitrag erstellen — so geht's"),
+        heading("h3", "1. Admin-Panel öffnen"),
+        paragraph(
+          "Gehen Sie zu /admin und melden Sie sich an. In der Seitenleiste finden Sie den Punkt 'Posts'.",
+        ),
+        heading("h3", "2. Neuen Beitrag anlegen"),
+        paragraph(
+          "Klicken Sie auf 'Create New'. Sie sehen den Editor mit allen Feldern: Titel, Slug, Kategorie, Excerpt, Inhalt und Vorschaubild.",
+        ),
+        heading("h3", "3. Inhalt schreiben"),
+        paragraph(
+          "Der Rich-Text-Editor unterstützt Überschriften, fett/kursiv, Listen, Links und Bilder. Schreiben Sie Ihren Text und formatieren Sie ihn nach Belieben.",
+        ),
+        heading("h3", "4. Veröffentlichen"),
+        paragraph(
+          "Setzen Sie den Status auf 'Published' und speichern Sie. Ihr Beitrag ist sofort unter /blog/[slug] verfügbar.",
+        ),
+        paragraph(
+          "Tipp: Speichern Sie zunächst als 'Draft', wenn Sie den Beitrag noch nicht veröffentlichen möchten. Entwürfe sind nur im Admin-Panel sichtbar.",
+        ),
+      ]),
+      meta: {
+        title: "So schreiben Sie Ihren ersten Beitrag",
+        description:
+          "Schritt-für-Schritt-Anleitung zum Erstellen eines Blog-Beitrags in OpenKERN.",
+      },
+    },
+  });
+
+  // Post 3: SEO tips
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "SEO-Tipps für Ihre Website",
+      slug: "seo-tipps",
+      _status: "published",
+      publishedAt: daysAgo(7),
+      category: "blog",
+      excerpt:
+        "Einfache Maßnahmen, mit denen Sie Ihre Website für Suchmaschinen optimieren — auch ohne SEO-Vorkenntnisse.",
+      content: lexicalRoot([
+        heading("h2", "Suchmaschinenoptimierung leicht gemacht"),
+        paragraph(
+          "SEO klingt kompliziert, aber die wichtigsten Grundlagen sind einfach umzusetzen. Hier sind die Maßnahmen, die den größten Unterschied machen.",
+        ),
+        heading("h3", "Seitentitel und Meta-Beschreibung"),
+        paragraph(
+          "Jede Seite und jeder Beitrag in OpenKERN hat Felder für 'Meta Title' und 'Meta Description'. Diese Texte erscheinen in den Google-Suchergebnissen. Formulieren Sie sie so, dass sie zum Klicken einladen und das Thema der Seite klar benennen.",
+        ),
+        heading("h3", "Sprechende URLs (Slugs)"),
+        paragraph(
+          "Der Slug bestimmt die URL Ihrer Seite. Verwenden Sie kurze, beschreibende Slugs: 'leistungen' statt 'page-2', 'seo-tipps' statt 'post-12345'. OpenKERN generiert Slugs automatisch aus dem Titel — prüfen Sie trotzdem, ob er passt.",
+        ),
+        heading("h3", "Überschriften-Hierarchie"),
+        paragraph(
+          "Verwenden Sie H2 für Hauptabschnitte und H3 für Unterabschnitte. Eine klare Überschriften-Struktur hilft Suchmaschinen und Besuchern gleichermaßen, Ihre Inhalte zu verstehen.",
+        ),
+        heading("h3", "Regelmäßig neue Inhalte"),
+        paragraph(
+          "Suchmaschinen bevorzugen Websites, die regelmäßig aktualisiert werden. Ihr Blog ist das perfekte Werkzeug dafür. Schon ein bis zwei Beiträge pro Monat machen einen Unterschied.",
+        ),
+      ]),
+      meta: {
+        title: "SEO-Tipps für Ihre Website",
+        description:
+          "Einfache SEO-Maßnahmen für Ihre OpenKERN-Website — Meta-Titel, Slugs, Überschriften und mehr.",
+      },
+    },
+  });
+
+  // Post 4: Using images effectively
+  await payload.create({
+    collection: "posts",
+    data: {
+      title: "Bilder richtig einsetzen",
+      slug: "bilder-einsetzen",
+      _status: "published",
+      publishedAt: daysAgo(12),
+      category: "blog",
+      excerpt:
+        "So verwalten Sie Bilder in OpenKERN: hochladen, optimieren und in Ihren Seiten und Beiträgen einsetzen.",
+      content: lexicalRoot([
+        heading("h2", "Medienverwaltung in OpenKERN"),
+        paragraph(
+          "Bilder machen Ihre Website lebendig. OpenKERN bietet eine integrierte Medienverwaltung, die das Hochladen und Verwalten von Bildern einfach macht.",
+        ),
+        heading("h3", "Bilder hochladen"),
+        paragraph(
+          "Gehen Sie im Admin-Panel zu 'Media' und klicken Sie auf 'Upload'. Sie können einzelne Bilder oder mehrere Dateien gleichzeitig hochladen. Unterstützte Formate: JPG, PNG, WebP, SVG.",
+        ),
+        heading("h3", "Bilder in Seiten verwenden"),
+        paragraph(
+          "In Layout-Blöcken wie Hero oder Portfolio können Sie Bilder direkt aus der Medienbibliothek auswählen. Im Rich-Text-Editor fügen Sie Bilder über den Image-Button in der Toolbar ein.",
+        ),
+        heading("h3", "Tipps für gute Bilder"),
+        paragraph(
+          "Verwenden Sie Bilder in hoher Auflösung — OpenKERN generiert automatisch verschiedene Größen für unterschiedliche Bildschirme. Achten Sie auf aussagekräftige Dateinamen und fügen Sie Alt-Texte hinzu, damit Suchmaschinen und Screenreader Ihre Bilder verstehen.",
+        ),
+        heading("h3", "Speicherplatz"),
+        paragraph(
+          "Ihre Medien werden auf Ihrem eigenen AWS S3-Bucket gespeichert. Sie haben die volle Kontrolle über Ihre Daten und keine Speicherlimits durch Drittanbieter.",
+        ),
+      ]),
+      meta: {
+        title: "Bilder richtig einsetzen",
+        description:
+          "So verwalten und nutzen Sie Bilder in OpenKERN — Upload, Optimierung und Best Practices.",
+      },
+    },
+  });
+
+  payload.logger.info("   4 posts created.");
+}
+
+async function seedCorporateGlobals(
+  payload: Payload,
+  theme: ThemeName,
+): Promise<void> {
+  payload.logger.info("-- Seeding globals (corporate)...");
+
+  await payload.updateGlobal({
+    slug: "header",
+    data: {
+      navItems: [
+        { label: "Startseite", url: "/" },
+        { label: "Leistungen", url: "/leistungen" },
+        { label: "Über uns", url: "/ueber-uns" },
+        { label: "Blog", url: "/blog" },
+        { label: "Kontakt", url: "/kontakt" },
+      ],
+      ctaButton: {
+        enabled: true,
+        label: "Admin-Panel",
+        url: "/admin",
+      },
+    },
+  });
+
+  await payload.updateGlobal({
+    slug: "footer",
+    data: {
+      columns: [
+        {
+          heading: "Seiten",
+          links: [
+            { label: "Startseite", url: "/" },
+            { label: "Leistungen", url: "/leistungen" },
+            { label: "Über uns", url: "/ueber-uns" },
+            { label: "Kontakt", url: "/kontakt" },
+          ],
+        },
+        {
+          heading: "Blog",
+          links: [{ label: "Alle Beiträge", url: "/blog" }],
+        },
+        {
+          heading: "OpenKERN",
+          links: [
+            { label: "Admin-Panel", url: "/admin" },
+            {
+              label: "GitHub",
+              url: "https://github.com/nice-solutions/openkern",
+            },
+            {
+              label: "Support",
+              url: "mailto:support@kern.technology",
+            },
+          ],
+        },
+      ],
+      copyright: "Erstellt mit OpenKERN",
+    },
+  });
+
+  await payload.updateGlobal({
+    slug: "site-settings",
+    data: {
+      theme,
+      siteName: "Mein Unternehmen",
+      siteDescription:
+        "Professionelle Website erstellt mit OpenKERN. Bearbeiten Sie alle Inhalte im Admin-Panel.",
+    },
+  });
+}
+
+/* ===========================================================================
+   THEME: bold — Schoenberg Digital Agency Showcase
+   =========================================================================== */
+
+async function seedBoldPages(payload: Payload): Promise<void> {
+  if (!(await collectionIsEmpty(payload, "pages"))) {
+    payload.logger.info("-- Pages collection is not empty, skipping.");
+    return;
+  }
+
+  payload.logger.info("-- Seeding Pages (bold)...");
 
   // 1. Startseite (Home) — uses layout blocks
   await payload.create({
@@ -83,7 +810,6 @@ async function seedPages(payload: Payload): Promise<void> {
       _status: "published",
       publishedAt: new Date().toISOString(),
       layout: [
-        // Hero block
         {
           blockType: "hero",
           headline: "Wir gestalten digitale Erlebnisse",
@@ -92,7 +818,6 @@ async function seedPages(payload: Payload): Promise<void> {
           primaryCta: { label: "Projekt starten", url: "/kontakt" },
           secondaryCta: { label: "Unsere Arbeit", url: "/leistungen" },
         },
-        // Services block
         {
           blockType: "services",
           headline: "Was wir tun",
@@ -125,7 +850,6 @@ async function seedPages(payload: Payload): Promise<void> {
             },
           ],
         },
-        // Portfolio block
         {
           blockType: "portfolio",
           headline: "Ausgewählte Projekte",
@@ -152,7 +876,6 @@ async function seedPages(payload: Payload): Promise<void> {
             },
           ],
         },
-        // Testimonials block
         {
           blockType: "testimonials",
           headline: "Was unsere Kunden sagen",
@@ -180,7 +903,6 @@ async function seedPages(payload: Payload): Promise<void> {
             },
           ],
         },
-        // CTA block
         {
           blockType: "cta",
           headline: "Bereit für Ihr nächstes Projekt?",
@@ -198,7 +920,7 @@ async function seedPages(payload: Payload): Promise<void> {
     },
   });
 
-  // 2. Leistungen — uses content (rich text)
+  // 2. Leistungen
   await payload.create({
     collection: "pages",
     data: {
@@ -229,7 +951,7 @@ async function seedPages(payload: Payload): Promise<void> {
     },
   });
 
-  // 3. Ueber uns — uses content (rich text)
+  // 3. Ueber uns
   await payload.create({
     collection: "pages",
     data: {
@@ -257,7 +979,7 @@ async function seedPages(payload: Payload): Promise<void> {
     },
   });
 
-  // 4. Kontakt — uses content (rich text)
+  // 4. Kontakt
   await payload.create({
     collection: "pages",
     data: {
@@ -288,24 +1010,16 @@ async function seedPages(payload: Payload): Promise<void> {
   payload.logger.info("   4 pages created.");
 }
 
-/* ---------------------------------------------------------------------------
-   Seed: Posts
-   -------------------------------------------------------------------------- */
-
-async function seedPosts(payload: Payload): Promise<void> {
+async function seedBoldPosts(payload: Payload): Promise<void> {
   if (!(await collectionIsEmpty(payload, "posts"))) {
     payload.logger.info("-- Posts collection is not empty, skipping.");
     return;
   }
 
-  payload.logger.info("-- Seeding Posts...");
+  payload.logger.info("-- Seeding Posts (bold)...");
 
-  // Stagger publish dates so posts appear in a sensible order
-  const baseDate = new Date("2026-03-15T10:00:00Z");
-  const daysAgo = (days: number) =>
-    new Date(baseDate.getTime() - days * 86_400_000).toISOString();
+  const daysAgo = makeDateHelper();
 
-  // Post 1
   await payload.create({
     collection: "posts",
     data: {
@@ -336,7 +1050,6 @@ async function seedPosts(payload: Payload): Promise<void> {
     },
   });
 
-  // Post 2
   await payload.create({
     collection: "posts",
     data: {
@@ -366,7 +1079,6 @@ async function seedPosts(payload: Payload): Promise<void> {
     },
   });
 
-  // Post 3
   await payload.create({
     collection: "posts",
     data: {
@@ -397,7 +1109,6 @@ async function seedPosts(payload: Payload): Promise<void> {
     },
   });
 
-  // Post 4
   await payload.create({
     collection: "posts",
     data: {
@@ -428,7 +1139,6 @@ async function seedPosts(payload: Payload): Promise<void> {
     },
   });
 
-  // Post 5
   await payload.create({
     collection: "posts",
     data: {
@@ -451,15 +1161,13 @@ async function seedPosts(payload: Payload): Promise<void> {
         ),
       ]),
       meta: {
-        title:
-          "Unser Prozess in 4 Schritten | Schönberg Digital",
+        title: "Unser Prozess in 4 Schritten | Schönberg Digital",
         description:
           "So arbeiten wir: Von der Analyse bis zum Launch — unser Webprojekt-Prozess im Überblick.",
       },
     },
   });
 
-  // Post 6
   await payload.create({
     collection: "posts",
     data: {
@@ -493,12 +1201,11 @@ async function seedPosts(payload: Payload): Promise<void> {
   payload.logger.info("   6 posts created.");
 }
 
-/* ---------------------------------------------------------------------------
-   Seed: Globals
-   -------------------------------------------------------------------------- */
-
-async function seedHeader(payload: Payload): Promise<void> {
-  payload.logger.info("-- Seeding Header global...");
+async function seedBoldGlobals(
+  payload: Payload,
+  theme: ThemeName,
+): Promise<void> {
+  payload.logger.info("-- Seeding globals (bold)...");
 
   await payload.updateGlobal({
     slug: "header",
@@ -517,10 +1224,6 @@ async function seedHeader(payload: Payload): Promise<void> {
       },
     },
   });
-}
-
-async function seedFooter(payload: Payload): Promise<void> {
-  payload.logger.info("-- Seeding Footer global...");
 
   await payload.updateGlobal({
     slug: "footer",
@@ -559,13 +1262,6 @@ async function seedFooter(payload: Payload): Promise<void> {
       ],
     },
   });
-}
-
-async function seedSiteSettings(
-  payload: Payload,
-  theme: ThemeName,
-): Promise<void> {
-  payload.logger.info("-- Seeding SiteSettings global...");
 
   await payload.updateGlobal({
     slug: "site-settings",
@@ -585,8 +1281,10 @@ async function seedSiteSettings(
 /**
  * Seeds the database with demo content for a fresh OpenKERN deployment.
  *
- * Populates pages and posts for a fictional boutique agency called
- * "Schoenberg Digital" (Designagentur fuer den DACH-Raum).
+ * Content is theme-aware:
+ * - "minimal" — Starter one-pager with instructional content
+ * - "corporate" — Professional multi-page site with guided subpages
+ * - "bold" — Schoenberg Digital agency showcase
  *
  * Safe to call multiple times — collections that already contain documents
  * will be skipped. Globals are always overwritten with seed data.
@@ -602,11 +1300,20 @@ export async function seed(
   payload.logger.info("=== OpenKERN Seed: Starting ===");
   payload.logger.info(`    Theme: ${resolvedTheme}`);
 
-  await seedPages(payload);
-  await seedPosts(payload);
-  await seedHeader(payload);
-  await seedFooter(payload);
-  await seedSiteSettings(payload, resolvedTheme);
+  if (resolvedTheme === "minimal") {
+    await seedMinimalPages(payload);
+    await seedMinimalPosts(payload);
+    await seedMinimalGlobals(payload, resolvedTheme);
+  } else if (resolvedTheme === "corporate") {
+    await seedCorporatePages(payload);
+    await seedCorporatePosts(payload);
+    await seedCorporateGlobals(payload, resolvedTheme);
+  } else {
+    // bold — existing Schoenberg Digital content
+    await seedBoldPages(payload);
+    await seedBoldPosts(payload);
+    await seedBoldGlobals(payload, resolvedTheme);
+  }
 
   payload.logger.info("=== OpenKERN Seed: Complete ===");
 }
