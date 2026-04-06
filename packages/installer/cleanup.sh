@@ -85,11 +85,13 @@ header "Scanning for OpenKERN resources..."
 # --- CloudFront Distributions ---
 DISTRIBUTIONS=()
 info "Checking CloudFront distributions..."
+# Discovery via comment ("OpenKERN: <site>")
 CF_LIST=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment!=null && contains(Comment, 'OpenKERN')].[Id,Comment,DomainName,Status]" --output text 2>/dev/null || true)
 if [[ -n "$CF_LIST" ]]; then
   while IFS=$'\t' read -r id comment domain status; do
-    # Extract site name from comment "OpenKERN: <site>"
+    [[ -z "$id" || "$id" == "None" ]] && continue
     site=$(echo "$comment" | sed -n 's/^OpenKERN: //p')
+    [[ -z "$site" ]] && continue
     [[ -n "$SITE_FILTER" && "$site" != "$SITE_FILTER" ]] && continue
     DISTRIBUTIONS+=("$id|$site|$domain|$status")
     track "$site"
@@ -97,7 +99,7 @@ if [[ -n "$CF_LIST" ]]; then
   done <<< "$CF_LIST"
 fi
 
-# Also check by tags for distributions without OpenKERN in comment
+# Also discover via tags (catches distributions without OpenKERN in comment)
 CF_TAGGED=$(aws resourcegroupstaggingapi get-resources \
   --tag-filters Key=Project,Values=openkern \
   --resource-type-filters cloudfront:distribution \
@@ -107,8 +109,10 @@ CF_TAGGED=$(aws resourcegroupstaggingapi get-resources \
 
 if [[ "$CF_TAGGED" != "[]" ]]; then
   while IFS= read -r arn; do
+    [[ -z "$arn" ]] && continue
     id=$(echo "$arn" | grep -o '[^/]*$')
-    # Skip if already found
+    [[ -z "$id" ]] && continue
+    # Skip if already found via comment
     if printf '%s\n' ${DISTRIBUTIONS[@]+"${DISTRIBUTIONS[@]}"} | grep -q "^${id}|" 2>/dev/null; then
       continue
     fi
@@ -118,6 +122,7 @@ if [[ "$CF_TAGGED" != "[]" ]]; then
       --region us-east-1 \
       --query "ResourceTagMappingList[?ResourceARN=='${arn}'].Tags[?Key=='Site'].Value | [0][0]" \
       --output text 2>/dev/null || echo "unknown")
+    [[ "$site" == "None" || -z "$site" ]] && site="unknown"
     [[ -n "$SITE_FILTER" && "$site" != "$SITE_FILTER" ]] && continue
     domain=$(aws cloudfront get-distribution --id "$id" --query "Distribution.DomainName" --output text 2>/dev/null || echo "?")
     status=$(aws cloudfront get-distribution --id "$id" --query "Distribution.Status" --output text 2>/dev/null || echo "?")
