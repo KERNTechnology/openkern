@@ -12,6 +12,21 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: "theme",
+      type: "select",
+      required: true,
+      defaultValue: "minimal",
+      options: [
+        { label: "Minimal — Clean & Modern", value: "minimal" },
+        { label: "Bold — Dark & Dynamic", value: "bold" },
+        { label: "Corporate — Professional & Structured", value: "corporate" },
+      ],
+      admin: {
+        description:
+          "Visual theme for the website. Changes take effect immediately.",
+      },
+    },
+    {
       name: "siteName",
       type: "text",
       required: true,

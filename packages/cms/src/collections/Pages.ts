@@ -1,5 +1,13 @@
 import type { CollectionConfig } from "payload";
 import { authenticated, authenticatedOrPublished } from "../access";
+import {
+  HeroBlock,
+  ServicesBlock,
+  PortfolioBlock,
+  TestimonialsBlock,
+  CTABlock,
+  RichTextBlock,
+} from "../blocks";
 
 export const Pages: CollectionConfig = {
   slug: "pages",
@@ -40,8 +48,28 @@ export const Pages: CollectionConfig = {
       relationTo: "media",
     },
     {
+      name: "layout",
+      type: "blocks",
+      blocks: [
+        HeroBlock,
+        ServicesBlock,
+        PortfolioBlock,
+        TestimonialsBlock,
+        CTABlock,
+        RichTextBlock,
+      ],
+      admin: {
+        description:
+          "Page layout using content blocks. Use this for structured pages like the homepage.",
+      },
+    },
+    {
       name: "content",
       type: "richText",
+      admin: {
+        description:
+          "Simple rich text content. Use this for basic pages like About or Contact.",
+      },
     },
     {
       name: "meta",

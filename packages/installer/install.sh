@@ -233,17 +233,19 @@ prompt_project() {
   AWS_REGION=$(prompt_value "AWS region" "eu-central-1")
   echo ""
 
-  echo "Template:"
-  echo "  [1] Agency — multi-page site with portfolio, services, about, contact"
-  echo "  [2] Landing — single page with hero, features, CTA"
+  echo "Theme:"
+  echo "  [1] Minimal    — clean, modern, generous whitespace"
+  echo "  [2] Bold       — dark, dynamic, gradients"
+  echo "  [3] Corporate  — professional, structured, trustworthy"
   echo ""
-  local template_choice
-  template_choice=$(prompt_value "Choose template" "1")
+  local theme_choice
+  theme_choice=$(prompt_value "Choose theme" "1")
 
-  case "$template_choice" in
-    1) TEMPLATE="agency" ;;
-    2) TEMPLATE="landing" ;;
-    *) TEMPLATE="agency" ;;
+  case "$theme_choice" in
+    1) TEMPLATE="minimal" ;;
+    2) TEMPLATE="bold" ;;
+    3) TEMPLATE="corporate" ;;
+    *) TEMPLATE="minimal" ;;
   esac
 
   echo ""
@@ -272,7 +274,7 @@ confirm() {
   echo "─────────────────────────────────────────────"
   echo ""
   echo "  Project:     $PROJECT_NAME"
-  echo "  Template:    $TEMPLATE"
+  echo "  Theme:       $TEMPLATE"
   echo "  AWS Region:  $AWS_REGION"
   echo "  Admin:       $ADMIN_EMAIL"
   echo "  Database:    KERN Managed (automatic)"
@@ -324,15 +326,7 @@ deploy() {
   fi
   cd "$WORK_DIR"
 
-  log_info "Scaffolding from template: $TEMPLATE"
-  # Copy the selected template into the CMS app directory if it exists
-  local TEMPLATE_DIR="packages/templates/$TEMPLATE"
-  if [[ -d "$TEMPLATE_DIR" ]]; then
-    cp -r "$TEMPLATE_DIR/"* packages/cms/ 2>/dev/null || true
-    log_ok "Template $TEMPLATE applied."
-  else
-    log_warn "Template $TEMPLATE not found — using default CMS config."
-  fi
+  log_info "Selected theme: $TEMPLATE"
 
   # 2. Write environment config
   log_info "Writing environment configuration..."
@@ -413,7 +407,7 @@ EOL
 
   # 8b. Seed demo content
   log_info "Seeding demo content..."
-  NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload run src/seed/index.ts
+  OPENKERN_THEME="$TEMPLATE" NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload run src/seed/index.ts
   log_ok "Demo content created."
 
   # 9. Create initial admin user via Payload

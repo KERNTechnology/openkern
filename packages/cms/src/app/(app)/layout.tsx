@@ -1,195 +1,94 @@
-// FILE: packages/cms/src/app/(app)/layout.tsx
-import React from "react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { getPayload } from "payload";
-import config from "@payload-config";
-import "./globals.css";
+import React from 'react'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
+import { getThemeComponents, isValidTheme } from '@/themes'
+import type { NavItem, FooterColumn, SocialLink } from '@/themes/types'
+
+import './globals.css'
+import '@/themes/minimal/theme.css'
+import '@/themes/bold/theme.css'
+import '@/themes/corporate/theme.css'
 
 const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
-
-/** Fetch SiteSettings global for metadata */
-async function getSiteSettings() {
-  try {
-    const payload = await getPayload({ config });
-    return await payload.findGlobal({ slug: "site-settings" });
-  } catch {
-    return null;
-  }
-}
-
-/** Fetch Header global for navigation */
-async function getHeader() {
-  try {
-    const payload = await getPayload({ config });
-    return await payload.findGlobal({ slug: "header" });
-  } catch {
-    return null;
-  }
-}
-
-/** Fetch Footer global */
-async function getFooter() {
-  try {
-    const payload = await getPayload({ config });
-    return await payload.findGlobal({ slug: "footer" });
-  } catch {
-    return null;
-  }
-}
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
-  return {
-    title: settings?.siteName ?? "OpenKERN Site",
-    description:
-      settings?.siteDescription ??
-      "Built with OpenKERN — Payload CMS + Next.js on AWS",
-    icons: {
-      icon: "/icon.svg",
-    },
-  };
-}
-
-interface NavItem {
-  label: string;
-  url: string;
-  openInNewTab?: boolean | null;
-  id?: string | null;
-}
-
-interface FooterColumn {
-  heading: string;
-  links?: { label: string; url: string; id?: string | null }[] | null;
-  id?: string | null;
-}
-
-function SiteHeader({
-  navItems,
-  ctaButton,
-  siteName,
-}: {
-  navItems?: NavItem[] | null;
-  ctaButton?: { enabled?: boolean | null; label?: string | null; url?: string | null } | null;
-  siteName: string;
-}) {
-  return (
-    <header className="site-header">
-      <div className="container">
-        <a href="/" className="site-header__logo">
-          Open<span>KERN</span>
-        </a>
-
-        <nav>
-          <ul className="site-header__nav">
-            {navItems?.map((item) => (
-              <li key={item.id ?? item.url}>
-                <a
-                  href={item.url}
-                  {...(item.url.startsWith("http")
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-            {ctaButton?.enabled && ctaButton.label && ctaButton.url && (
-              <li>
-                <a href={ctaButton.url} className="site-header__cta">
-                  {ctaButton.label}
-                </a>
-              </li>
-            )}
-            <li>
-              <a
-                href="https://www.kern.technology#kontakt"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="site-header__cta"
-              >
-                Kontakt
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-function SiteFooter({
-  columns,
-  copyright,
-}: {
-  columns?: FooterColumn[] | null;
-  copyright?: string | null;
-}) {
-  // Flatten all footer links for a simple link bar
-  const allLinks =
-    columns?.flatMap(
-      (col) =>
-        col.links?.map((link) => ({
-          label: link.label,
-          url: link.url,
-          id: link.id,
-        })) ?? [],
-    ) ?? [];
-
-  return (
-    <footer className="site-footer">
-      <div className="container">
-        <p className="site-footer__copy" style={{ marginBottom: "0.5rem" }}>
-          Built with <a href="https://install.openkern.org" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: "2px" }}><strong>OpenKERN</strong></a> — Payload CMS + Next.js on AWS
-        </p>
-
-        {allLinks.length > 0 && (
-          <ul className="site-footer__links">
-            {allLinks.map((link) => (
-              <li key={link.id ?? link.url}>
-                <a href={link.url}>{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {copyright && <p className="site-footer__copy">{copyright}</p>}
-      </div>
-    </footer>
-  );
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const settings = await payload.findGlobal({ slug: 'site-settings' })
+    return {
+      title: settings?.siteName ?? 'OpenKERN Site',
+      description:
+        settings?.siteDescription ??
+        'Built with OpenKERN — Payload CMS + Next.js on AWS',
+      icons: { icon: '/icon.svg' },
+    }
+  } catch {
+    return {
+      title: 'OpenKERN Site',
+      description: 'Built with OpenKERN — Payload CMS + Next.js on AWS',
+      icons: { icon: '/icon.svg' },
+    }
+  }
 }
 
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const [settings, header, footer] = await Promise.all([
-    getSiteSettings(),
-    getHeader(),
-    getFooter(),
-  ]);
+  const payload = await getPayload({ config: configPromise })
 
-  const siteName = settings?.siteName ?? "OpenKERN";
+  const [settings, headerData, footerData] = await Promise.all([
+    payload.findGlobal({ slug: 'site-settings' }).catch(() => null),
+    payload.findGlobal({ slug: 'header' }).catch(() => null),
+    payload.findGlobal({ slug: 'footer' }).catch(() => null),
+  ])
+
+  const themeName = isValidTheme(settings?.theme) ? settings.theme : 'minimal'
+  const { Header, Footer } = getThemeComponents(themeName)
+
+  const siteName = settings?.siteName ?? 'OpenKERN'
+
+  // Map header data
+  const navItems = (headerData?.navItems as NavItem[] | undefined) ?? []
+  const ctaButton = headerData?.ctaButton
+  const logo = headerData?.logo
+    ? {
+        url: (headerData.logo as { url: string }).url,
+        alt:
+          (headerData.logo as { alt?: string }).alt || siteName,
+      }
+    : null
+
+  // Map footer data
+  const columns = (footerData?.columns as FooterColumn[] | undefined) ?? []
+  const copyright = footerData?.copyright
+  const socialLinks =
+    (footerData?.socialLinks as SocialLink[] | undefined) ?? []
 
   return (
-    <html lang="de" className={inter.variable}>
+    <html lang="de" className={inter.variable} data-theme={themeName}>
       <body>
-        <SiteHeader
-          navItems={header?.navItems as NavItem[] | undefined}
-          ctaButton={header?.ctaButton}
+        <Header
+          navItems={navItems}
+          ctaButton={ctaButton}
           siteName={siteName}
+          logo={logo}
         />
         {children}
-        <SiteFooter
-          columns={footer?.columns as FooterColumn[] | undefined}
-          copyright={footer?.copyright}
+        <Footer
+          columns={columns}
+          copyright={copyright}
+          socialLinks={socialLinks}
+          siteName={siteName}
         />
       </body>
     </html>
-  );
+  )
 }

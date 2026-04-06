@@ -1,87 +1,88 @@
-import React from "react";
-import type { Metadata } from "next";
-import { getPayload } from "payload";
-import config from "@payload-config";
-import { notFound } from "next/navigation";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import React from 'react'
+import type { Metadata } from 'next'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
+import { notFound } from 'next/navigation'
+import { RichText } from '@payloadcms/richtext-lexical/react'
+import { getThemeComponents, isValidTheme } from '@/themes'
 
 async function getPost(slug: string) {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayload({ config: configPromise })
     const result = await payload.find({
-      collection: "posts",
+      collection: 'posts',
       where: { slug: { equals: slug } },
       limit: 1,
-    });
-    return result.docs[0] ?? null;
+      depth: 2,
+    })
+    return result.docs[0] ?? null
   } catch {
-    return null;
+    return null
   }
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getPost(slug);
-  if (!post) return {};
+  const { slug } = await params
+  const post = await getPost(slug)
+  if (!post) return {}
   const meta = post.meta as
     | { title?: string | null; description?: string | null }
-    | undefined;
+    | undefined
   return {
     title: meta?.title ?? post.title,
     description: meta?.description ?? post.excerpt ?? undefined,
-  };
+  }
 }
 
 export default async function PostRoute({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }) {
-  const { slug } = await params;
-  const post = await getPost(slug);
-  if (!post) notFound();
+  const { slug } = await params
+  const post = await getPost(slug)
+  if (!post) notFound()
+
+  const payload = await getPayload({ config: configPromise })
+  const settings = await payload
+    .findGlobal({ slug: 'site-settings' })
+    .catch(() => null)
+  const themeName = isValidTheme(settings?.theme) ? settings.theme : 'minimal'
+  const { PageLayout } = getThemeComponents(themeName)
 
   return (
-    <main className="light-section section">
-      <div className="container" style={{ maxWidth: "800px" }}>
-        <a href="/blog" style={{ fontSize: "0.875rem", color: "var(--color-primary)", marginBottom: "2rem", display: "inline-block" }}>
-          &larr; Alle Beiträge
-        </a>
+    <PageLayout title={post.title}>
+      <a
+        href="/blog"
+        className="t-back-link"
+      >
+        &larr; Alle Beiträge
+      </a>
 
-        <h1 style={{ fontSize: "2.25rem", fontWeight: 700, letterSpacing: "-0.025em", marginBottom: "0.75rem" }}>
-          {post.title}
-        </h1>
-
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "2rem", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
-          {post.publishedAt && (
-            <time>
-              {new Date(post.publishedAt).toLocaleDateString("de-DE", { year: "numeric", month: "long", day: "numeric" })}
-            </time>
-          )}
-          {post.category && (
-            <span style={{
-              padding: "0.125rem 0.5rem",
-              borderRadius: "9999px",
-              background: "var(--color-primary)",
-              color: "#fff",
-              fontSize: "0.75rem",
-              fontWeight: 500,
-            }}>
-              {post.category}
-            </span>
-          )}
-        </div>
-
-        {post.content && (
-          <div className="rich-text">
-            <RichText data={post.content} />
-          </div>
+      <div className="t-post-meta">
+        {post.publishedAt && (
+          <time>
+            {new Date(post.publishedAt).toLocaleDateString('de-DE', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </time>
+        )}
+        {post.category && (
+          <span className="t-post-meta__category">{post.category}</span>
         )}
       </div>
-    </main>
-  );
+
+      {post.content && (
+        <div className="rich-text">
+          <RichText data={post.content} />
+        </div>
+      )}
+    </PageLayout>
+  )
 }
