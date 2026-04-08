@@ -327,7 +327,7 @@ async function seedMinimalGlobals(
             { label: "Admin-Panel", url: "/admin" },
             {
               label: "Dokumentation",
-              url: "https://github.com/nice-solutions/openkern",
+              url: "https://github.com/KERNTechnology/openkern",
             },
             {
               label: "Support",
@@ -766,7 +766,7 @@ async function seedCorporateGlobals(
             { label: "Admin-Panel", url: "/admin" },
             {
               label: "GitHub",
-              url: "https://github.com/nice-solutions/openkern",
+              url: "https://github.com/KERNTechnology/openkern",
             },
             {
               label: "Support",

@@ -1,6 +1,6 @@
 # OpenKERN
 
-[![CI](https://github.com/nice-solutions/openkern/actions/workflows/ci.yml/badge.svg)](https://github.com/nice-solutions/openkern/actions/workflows/ci.yml)
+[![CI](https://github.com/KERNTechnology/openkern/actions/workflows/ci.yml/badge.svg)](https://github.com/KERNTechnology/openkern/actions/workflows/ci.yml)
 [![License: BSL 1.1](https://img.shields.io/badge/license-BSL%201.1-blue.svg)](LICENSE)
 [![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.79.1-6366f1.svg)](https://payloadcms.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15.4-black.svg)](https://nextjs.org)

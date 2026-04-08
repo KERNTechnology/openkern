@@ -8,7 +8,7 @@ set -euo pipefail
 # =============================================================================
 
 VERSION="0.1.0"
-OPENKERN_REPO="https://github.com/nice-solutions/openkern"
+OPENKERN_REPO="https://github.com/KERNTechnology/openkern"
 KERN_API_URL="https://api.openkern.org"
 LOCAL_REPO=""
 
