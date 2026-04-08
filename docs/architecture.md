@@ -6,17 +6,17 @@
 Customer AWS Account                     KERN (managed)
 ┌──────────────────────────┐            ┌──────────────────────┐
 │                          │            │                      │
-│  <random>.openkern.org   │            │  Route53: openkern.org│
-│  CloudFront (CDN)        │            │  ACM: *.openkern.org │
+│  CloudFront (CDN)        │            │  Aurora Serverless   │
+│  d1234567890.cloudfront  │            │  (PostgreSQL 16)     │
 │  ├── /_next/static/*     │            │                      │
-│  │   └── S3 (assets)     │            │  Aurora Serverless   │
-│  ├── /_next/image        │            │  (PostgreSQL 16)     │
-│  │   └── Lambda (image)  │  SSL/TLS   │                      │
-│  ├── /media/*            │            │  Per customer:       │
-│  │   └── S3 (media)      │            │  - Own database      │
-│  └── /* (default)        │            │  - Own user          │
-│      └── Lambda (server)─┼────────────┤  - Own password      │
-│         OpenNext         │            │  - Conn limit        │
+│  │   └── S3 (assets)     │            │  Per customer:       │
+│  ├── /_next/image        │            │  - Own database      │
+│  │   └── Lambda (image)  │  SSL/TLS   │  - Own user          │
+│  ├── /media/*            │            │  - Own password      │
+│  │   └── S3 (media)      │            │  - Conn limit        │
+│  └── /* (default)        │            │                      │
+│      └── Lambda (server)─┼────────────┤                      │
+│         OpenNext         │            │                      │
 │         Payload CMS      │            │                      │
 │         Next.js SSR      │            └──────────────────────┘
 │                          │
@@ -27,19 +27,19 @@ Customer cost: ~$0-5/month
 
 ### Domain Model
 
-Every Starter site gets a subdomain under `openkern.org`:
+Sites run on their **CloudFront distribution domain** by default (e.g. `d1234567890.cloudfront.net`).
 
-```
-<random>.openkern.org   (e.g. a7f3x9bc.openkern.org)
-```
+Customers can add a **custom domain** at any time:
 
-- The `openkern.org` Route53 zone and wildcard ACM certificate (`*.openkern.org`) are managed in the KERN AWS account.
-- The installer generates a random 8-character subdomain and creates the CNAME record automatically.
-- **Custom domains are free:** customers can add their own domain (e.g. `www.example.com`) by creating an ACM certificate in their AWS account (us-east-1) and pointing a CNAME to their `<random>.openkern.org` subdomain.
+1. Create an ACM certificate in us-east-1 for the custom domain
+2. Add the domain as an alias on the CloudFront distribution
+3. Point a CNAME (or A-record alias) to the CloudFront distribution domain
+
+There are no openkern.org subdomains. Every site is served directly from CloudFront.
 
 ### Request Flow
 
-1. User visits `https://a7f3x9bc.openkern.org` (or custom domain)
+1. User visits `https://d1234567890.cloudfront.net` (or a custom domain pointing to CloudFront)
 2. CloudFront routes the request:
    - Static assets (`/_next/static/*`) → S3 assets bucket (cached)
    - Image optimization (`/_next/image`) → Image optimization Lambda (arm64)
@@ -88,8 +88,8 @@ Everything runs on the customer's AWS account. Full data sovereignty. No externa
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| CMS | Payload 3.x | TypeScript-native, runs inside Next.js, open source |
-| Framework | Next.js 15 | App Router, SSR + static, Payload's native runtime |
+| CMS | Payload 3.79.1 | TypeScript-native, runs inside Next.js, open source |
+| Framework | Next.js 15.4 | App Router, SSR + static, Payload's native runtime |
 | Serverless adapter | OpenNext | Deploys Next.js to Lambda with proper routing |
 | IaC | Pulumi (TypeScript) | Same language as the application code |
 | Database | PostgreSQL (Aurora) | Payload's recommended adapter, relational queries |

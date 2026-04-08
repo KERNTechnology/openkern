@@ -6,69 +6,68 @@ OpenKERN deploys a Payload CMS website on your AWS account. The Starter tier use
 
 ## Prerequisites
 
-1. **AWS account** with CLI configured (`aws configure`)
-2. **Node.js >= 20** installed
-3. **Pulumi CLI** installed (`curl -fsSL https://get.pulumi.com | sh`)
-4. **KERN database credentials** — register at kern.technology
+1. **macOS** (the installer currently supports macOS only)
+2. **AWS account** with CLI configured (`aws configure`)
+3. **Node.js >= 20** installed
+4. **Pulumi CLI** installed (`curl -fsSL https://get.pulumi.com | sh`)
 
 ## Installation
 
 ```bash
-# Verified install (recommended) — downloads, verifies SHA-256 checksum, then runs
-curl -fsSL https://install.openkern.org/verify-and-install.sh | bash
-```
-
-Or manually verify before running:
-
-```bash
-# Download
-curl -fsSL https://install.openkern.org/install.sh -o install.sh
-
-# Verify checksum against https://install.openkern.org/checksums.txt
-curl -fsSL https://install.openkern.org/checksums.txt | grep install.sh | shasum -a 256 -c
-
-# Run
-bash install.sh
+curl -fsSL https://install.openkern.org/install.sh | bash
 ```
 
 The installer will:
+
 1. Run preflight checks (AWS CLI, Node.js, Pulumi)
-2. Ask for your KERN database credentials
-3. Ask for project name, AWS region, and template choice
+2. Read your API token from Secrets Manager (or prompt you to enter it manually)
+3. Ask for project name, AWS region, and theme (Starter / Bold / Professional)
 4. Deploy Lambda + S3 + CloudFront on your AWS account
-5. Assign a random subdomain (`<random>.openkern.org`)
-6. Build and deploy via OpenNext (Next.js → Lambda)
-7. Create your admin account
-8. Output your site URL and admin panel URL
+5. Build and deploy via OpenNext (Next.js to Lambda)
+6. Run database migrations
+7. Seed demo content based on your theme choice
 
 ## After Installation
 
-- Visit `/admin` to log into the Payload CMS admin panel
-- Add pages, posts, and media through the visual editor
-- Your site auto-updates when you publish content
+1. The installer prints your CloudFront URL at the end (e.g. `https://d1234567890.cloudfront.net`)
+2. Visit that URL with `/admin` appended (e.g. `https://d1234567890.cloudfront.net/admin`)
+3. Payload shows a first-user registration form — create your admin account there
+4. Start editing content through the admin panel
 
-## Domains
+## Custom Domain
 
-Every site gets a free subdomain: `<random>.openkern.org` (e.g. `a7f3x9bc.openkern.org`). This is assigned automatically during installation.
-
-### Custom Domain (Free)
-
-To use your own domain alongside the openkern.org subdomain:
+Sites run on their CloudFront domain by default. To use your own domain:
 
 1. Create an ACM certificate for your domain in **us-east-1** (required by CloudFront)
-2. During installation, enter your domain and the ACM certificate ARN when prompted
-3. After deployment, point a CNAME from your domain to `<random>.openkern.org`
+2. Add your domain as an alias to your CloudFront distribution
+3. Point a CNAME (or A-record alias) from your domain to your CloudFront distribution domain
 
-You can also add a custom domain after installation by updating the Pulumi config:
+There are no `openkern.org` subdomains. Your site is served from CloudFront directly.
+
+## Redeploying
+
+After making code changes, redeploy with:
 
 ```bash
-cd packages/infra/pulumi/starter
-pulumi config set openkern:customDomain yourdomain.com
-pulumi config set openkern:customCertArn arn:aws:acm:us-east-1:123:certificate/abc
-pulumi up --yes
+bash packages/installer/deploy.sh
 ```
 
-Then point your DNS CNAME to your `<random>.openkern.org` subdomain.
+## Your Code, Your Repo
+
+The installed project is yours. Set up your own Git remote and manage your codebase however you like:
+
+```bash
+git remote add origin git@github.com:your-org/your-site.git
+git push -u origin main
+```
+
+## Cleanup
+
+To tear down all deployed resources:
+
+```bash
+./cleanup.sh --destroy
+```
 
 ## Upgrading to Professional
 
