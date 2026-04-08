@@ -91,6 +91,50 @@ pulumi destroy
 pulumi stack rm <stack-name> --yes
 ```
 
+### Updates
+
+Your OpenKERN project is your own codebase. Updates to Payload CMS, Next.js, and other dependencies are your responsibility.
+
+**Check for outdated packages:**
+
+```bash
+cd packages/cms
+npm outdated
+```
+
+**Update Payload CMS (patch/minor):**
+
+```bash
+npm update @payloadcms/db-postgres @payloadcms/richtext-lexical @payloadcms/storage-s3 @payloadcms/next @payloadcms/ui payload
+```
+
+**Update Next.js:**
+
+```bash
+npm update next eslint-config-next
+```
+
+**After updating, generate new migrations and redeploy:**
+
+```bash
+# Generate migration for schema changes
+NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate:create update
+
+# Test locally
+npm run build
+
+# Deploy
+bash packages/installer/deploy.sh
+
+# Run migrations on the live DB
+NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate
+```
+
+**Important:**
+- Always test `npm run build` locally before deploying
+- Major version updates (e.g. Payload 3 → 4, Next.js 15 → 16) may require code changes — check the release notes
+- Follow [@KERNTechnology on GitHub](https://github.com/KERNTechnology/openkern/releases) for OpenKERN-specific update notes
+
 ---
 
 ## Tiers
