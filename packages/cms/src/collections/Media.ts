@@ -15,6 +15,8 @@ export const Media: CollectionConfig = {
   admin: {
     useAsTitle: "alt",
     defaultColumns: ["filename", "alt", "updatedAt"],
+    description:
+      "Bilder und Dokumente. Alle Dateien werden auf Ihrem eigenen AWS S3 gespeichert.",
   },
   access: {
     read: anyone,
@@ -27,10 +29,17 @@ export const Media: CollectionConfig = {
       name: "alt",
       type: "text",
       required: true,
+      admin: {
+        description:
+          "Alternativtext für Barrierefreiheit und SEO. Beschreiben Sie kurz, was auf dem Bild zu sehen ist.",
+      },
     },
     {
       name: "caption",
       type: "textarea",
+      admin: {
+        description: "Optionale Bildunterschrift.",
+      },
     },
   ],
 };

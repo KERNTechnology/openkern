@@ -194,7 +194,72 @@ async function seedMinimalPages(payload: Payload): Promise<void> {
     },
   });
 
-  payload.logger.info("   1 page created.");
+  // Erste Schritte guide page
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Erste Schritte",
+      slug: "erste-schritte",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      content: lexicalRoot([
+        heading("h2", "Willkommen im Admin-Panel"),
+        paragraph(
+          "Sie haben Ihre OpenKERN-Website erfolgreich installiert. Diese Seite zeigt Ihnen die wichtigsten ersten Schritte, um Ihre Website mit eigenen Inhalten zu füllen.",
+        ),
+
+        heading("h2", "1. Seiten bearbeiten"),
+        paragraph(
+          "Klicken Sie links im Menü auf 'Seiten'. Dort sehen Sie alle vorhandenen Seiten. Klicken Sie auf eine Seite, um sie zu bearbeiten. Sie können den Titel ändern, Texte anpassen und neue Inhaltsblöcke hinzufügen.",
+        ),
+        paragraph(
+          "Die Startseite (Slug: 'home') verwendet Layout-Blöcke — das sind vorgefertigte Abschnitte wie Hero, Leistungen oder Testimonials. Sie können Blöcke hinzufügen, entfernen und per Drag & Drop umsortieren.",
+        ),
+
+        heading("h2", "2. Blog-Beiträge schreiben"),
+        paragraph(
+          "Unter 'Posts' können Sie Blog-Artikel erstellen. Jeder Beitrag hat einen Titel, eine Kurzbeschreibung (Excerpt), eine Kategorie und einen Rich-Text-Editor für den Inhalt. Vergessen Sie nicht, den Status auf 'Published' zu setzen, damit der Beitrag öffentlich sichtbar wird.",
+        ),
+
+        heading("h2", "3. Medien hochladen"),
+        paragraph(
+          "Unter 'Media' laden Sie Bilder und Dokumente hoch. Alle Dateien werden auf Ihrem eigenen AWS S3-Bucket gespeichert. Bilder werden automatisch in verschiedenen Größen erzeugt (Thumbnail, Medium, Large). Tipp: Vergeben Sie immer einen aussagekräftigen Alt-Text — das hilft bei der Barrierefreiheit und SEO.",
+        ),
+
+        heading("h2", "4. Navigation anpassen"),
+        paragraph(
+          "Die Navigation bearbeiten Sie unter 'Header' (im Bereich 'Navigation'). Dort können Sie Links hinzufügen, entfernen und die Reihenfolge ändern. Der Footer funktioniert genauso — klicken Sie auf 'Footer' um die Fußzeilen-Links und Social-Media-Profile zu bearbeiten.",
+        ),
+
+        heading("h2", "5. Theme wechseln"),
+        paragraph(
+          "Unter 'Settings' → 'Site Settings' finden Sie die Einstellung 'Theme'. Wechseln Sie zwischen Minimal, Bold und Corporate. Die Änderung wirkt sofort auf allen Seiten — kein erneutes Deployment nötig.",
+        ),
+
+        heading("h2", "6. Eigene Domain verbinden"),
+        paragraph(
+          "Ihre Website ist standardmäßig unter einer CloudFront-Domain erreichbar. Um Ihre eigene Domain zu verwenden (z.B. www.meinefirma.de), erstellen Sie ein SSL-Zertifikat in AWS Certificate Manager (Region us-east-1) und fügen Sie die Domain als Alias in Ihrer CloudFront-Distribution hinzu. Details finden Sie in der OpenKERN-Dokumentation auf GitHub.",
+        ),
+
+        heading("h2", "7. Änderungen am Code"),
+        paragraph(
+          "Design-Anpassungen und neue Funktionen erfordern Code-Änderungen. Bearbeiten Sie die Dateien lokal in Ihrem Projektverzeichnis und führen Sie anschließend deploy.sh aus, um die Änderungen live zu schalten. Die Theme-Dateien finden Sie unter packages/cms/src/themes/.",
+        ),
+
+        heading("h2", "Hilfe & Support"),
+        paragraph(
+          "Dokumentation und Quellcode: github.com/KERNTechnology/openkern. Bei Fragen: support@kern.technology. Diese Seite können Sie bedenkenlos löschen oder bearbeiten, sobald Sie sich zurechtgefunden haben.",
+        ),
+      ]),
+      meta: {
+        title: "Erste Schritte — So bearbeiten Sie Ihre Website",
+        description:
+          "Anleitung für die ersten Schritte mit Ihrem OpenKERN CMS: Seiten bearbeiten, Blog schreiben, Medien hochladen.",
+      },
+    },
+  });
+
+  payload.logger.info("   2 pages created.");
 }
 
 async function seedMinimalPosts(payload: Payload): Promise<void> {
@@ -307,6 +372,7 @@ async function seedMinimalGlobals(
     data: {
       navItems: [
         { label: "Startseite", url: "/" },
+        { label: "Erste Schritte", url: "/erste-schritte" },
         { label: "Blog", url: "/blog" },
       ],
       ctaButton: {
@@ -545,7 +611,74 @@ async function seedCorporatePages(payload: Payload): Promise<void> {
     },
   });
 
-  payload.logger.info("   4 pages created.");
+  // Erste Schritte guide page (same content as minimal)
+  await payload.create({
+    collection: "pages",
+    data: {
+      title: "Erste Schritte",
+      slug: "erste-schritte",
+      _status: "published",
+      publishedAt: new Date().toISOString(),
+      content: lexicalRoot([
+        heading("h2", "Willkommen im Admin-Panel"),
+        paragraph(
+          "Sie haben Ihre OpenKERN-Website erfolgreich installiert. Diese Seite zeigt Ihnen die wichtigsten ersten Schritte, um Ihre Website mit eigenen Inhalten zu füllen.",
+        ),
+
+        heading("h2", "1. Seiten bearbeiten"),
+        paragraph(
+          "Klicken Sie links im Menü auf 'Seiten'. Dort sehen Sie alle vorhandenen Seiten. Klicken Sie auf eine Seite, um sie zu bearbeiten. Die Startseite verwendet Layout-Blöcke — vorgefertigte Abschnitte wie Hero, Leistungen oder Testimonials, die Sie per Drag & Drop anordnen können.",
+        ),
+
+        heading("h2", "2. Neue Seiten erstellen"),
+        paragraph(
+          "Klicken Sie auf 'Neue Seite erstellen'. Vergeben Sie einen Titel und einen Slug (URL-Pfad). Sie können entweder Layout-Blöcke verwenden (für strukturierte Seiten) oder den Freitext-Editor (für einfache Textseiten). Vergessen Sie nicht, den Status auf 'Published' zu setzen.",
+        ),
+
+        heading("h2", "3. Blog-Beiträge schreiben"),
+        paragraph(
+          "Unter 'Posts' erstellen Sie Blog-Artikel. Geben Sie einen Titel, eine Kurzbeschreibung und den Inhalt ein. Wählen Sie eine Kategorie und setzen Sie den Status auf 'Published'. Ihre Beiträge erscheinen automatisch unter /blog.",
+        ),
+
+        heading("h2", "4. Medien hochladen"),
+        paragraph(
+          "Unter 'Media' laden Sie Bilder und Dokumente hoch. Alle Dateien werden auf Ihrem eigenen AWS S3 gespeichert. Bilder werden automatisch in verschiedenen Größen erzeugt. Tipp: Vergeben Sie immer einen Alt-Text für Barrierefreiheit und SEO.",
+        ),
+
+        heading("h2", "5. Navigation & Footer anpassen"),
+        paragraph(
+          "Unter 'Header' bearbeiten Sie die Navigation (Links, Reihenfolge, CTA-Button). Unter 'Footer' die Fußzeile (Spalten, Links, Social-Media-Profile). Unter 'Site Settings' den Website-Namen, die Beschreibung und das Theme.",
+        ),
+
+        heading("h2", "6. Theme wechseln"),
+        paragraph(
+          "Unter 'Settings' → 'Site Settings' → 'Theme' wechseln Sie zwischen Minimal, Bold und Corporate. Die Änderung wirkt sofort — kein erneutes Deployment nötig.",
+        ),
+
+        heading("h2", "7. Eigene Domain verbinden"),
+        paragraph(
+          "Erstellen Sie ein SSL-Zertifikat in AWS Certificate Manager (Region us-east-1) und fügen Sie Ihre Domain als Alias in der CloudFront-Distribution hinzu. Details in der Dokumentation auf GitHub.",
+        ),
+
+        heading("h2", "8. Code-Änderungen deployen"),
+        paragraph(
+          "Für Design-Anpassungen bearbeiten Sie die Dateien lokal und führen deploy.sh aus. Theme-Dateien: packages/cms/src/themes/. Neue Blöcke: packages/cms/src/blocks/.",
+        ),
+
+        heading("h2", "Hilfe & Support"),
+        paragraph(
+          "Dokumentation: github.com/KERNTechnology/openkern | Support: support@kern.technology | Diese Seite können Sie löschen, sobald Sie sich zurechtgefunden haben.",
+        ),
+      ]),
+      meta: {
+        title: "Erste Schritte — So bearbeiten Sie Ihre Website",
+        description:
+          "Anleitung für die ersten Schritte mit Ihrem OpenKERN CMS.",
+      },
+    },
+  });
+
+  payload.logger.info("   5 pages created.");
 }
 
 async function seedCorporatePosts(payload: Payload): Promise<void> {
@@ -734,6 +867,7 @@ async function seedCorporateGlobals(
         { label: "Über uns", url: "/ueber-uns" },
         { label: "Blog", url: "/blog" },
         { label: "Kontakt", url: "/kontakt" },
+        { label: "Erste Schritte", url: "/erste-schritte" },
       ],
       ctaButton: {
         enabled: true,

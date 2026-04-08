@@ -9,6 +9,8 @@ export const SiteSettings: GlobalConfig = {
   },
   admin: {
     group: "Settings",
+    description:
+      "Globale Einstellungen für Ihre Website. Änderungen wirken sich auf die gesamte Seite aus.",
   },
   fields: [
     {
@@ -23,7 +25,7 @@ export const SiteSettings: GlobalConfig = {
       ],
       admin: {
         description:
-          "Visual theme for the website. Changes take effect immediately.",
+          "Visuelles Theme der Website. Änderungen werden sofort auf allen Seiten sichtbar — kein erneutes Deployment nötig.",
       },
     },
     {
@@ -31,39 +33,50 @@ export const SiteSettings: GlobalConfig = {
       type: "text",
       required: true,
       defaultValue: "My OpenKERN Site",
+      admin: {
+        description:
+          "Name Ihrer Website. Wird im Browser-Tab und in Suchmaschinen angezeigt.",
+      },
     },
     {
       name: "siteDescription",
       type: "textarea",
       admin: {
-        description: "Default meta description for the site.",
+        description:
+          "Standard-Beschreibung für Suchmaschinen. Wird verwendet, wenn eine Seite keine eigene Beschreibung hat.",
       },
     },
     {
       name: "favicon",
       type: "upload",
       relationTo: "media",
+      admin: {
+        description:
+          "Kleines Icon im Browser-Tab. Empfohlen: 32x32 Pixel, PNG oder ICO.",
+      },
     },
     {
       name: "ogImage",
       type: "upload",
       relationTo: "media",
       admin: {
-        description: "Default image used when sharing pages on social media.",
+        description:
+          "Standard-Bild beim Teilen auf Social Media. Empfohlen: 1200x630 Pixel.",
       },
     },
     {
       name: "analytics",
       type: "group",
       admin: {
-        description: "Third-party analytics integration.",
+        description: "Drittanbieter-Analyse-Integration.",
       },
       fields: [
         {
           name: "googleAnalyticsId",
           type: "text",
           admin: {
-            description: "Google Analytics measurement ID (e.g. G-XXXXXXXXXX).",
+            description:
+              "Google Analytics Measurement ID (z.B. G-XXXXXXXXXX). Leer lassen, wenn Sie kein Google Analytics verwenden.",
           },
         },
       ],

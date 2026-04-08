@@ -14,6 +14,8 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "slug", "_status", "updatedAt"],
+    description:
+      "Verwalten Sie Ihre Website-Seiten. Jede Seite hat eine eigene URL (Slug) und kann mit Layout-Blöcken oder Freitext gestaltet werden.",
   },
   access: {
     read: authenticatedOrPublished,
@@ -40,12 +42,17 @@ export const Pages: CollectionConfig = {
       unique: true,
       admin: {
         position: "sidebar",
+        description:
+          "URL-Pfad der Seite (z.B. 'leistungen' für /leistungen). Wird automatisch in der Adresszeile verwendet.",
       },
     },
     {
       name: "heroImage",
       type: "upload",
       relationTo: "media",
+      admin: {
+        description: "Optionales Titelbild für die Seite.",
+      },
     },
     {
       name: "layout",
@@ -60,7 +67,7 @@ export const Pages: CollectionConfig = {
       ],
       admin: {
         description:
-          "Page layout using content blocks. Use this for structured pages like the homepage.",
+          "Seitenlayout mit Inhaltsblöcken. Nutzen Sie dies für strukturierte Seiten wie die Startseite. Blöcke können per Drag & Drop angeordnet werden.",
       },
     },
     {
@@ -68,7 +75,7 @@ export const Pages: CollectionConfig = {
       type: "richText",
       admin: {
         description:
-          "Simple rich text content. Use this for basic pages like About or Contact.",
+          "Freitext-Inhalt mit dem Rich-Text-Editor. Nutzen Sie dies für einfache Seiten wie Über uns oder Kontakt.",
       },
     },
     {
@@ -79,14 +86,14 @@ export const Pages: CollectionConfig = {
           name: "title",
           type: "text",
           admin: {
-            description: "Overrides the page title for SEO. Leave blank to use the page title.",
+            description: "Überschreibt den Seitentitel für Suchmaschinen. Leer lassen, um den Seitentitel zu verwenden.",
           },
         },
         {
           name: "description",
           type: "textarea",
           admin: {
-            description: "Short description for search engines (max 160 characters).",
+            description: "Kurzbeschreibung für Suchmaschinen (max. 160 Zeichen). Erscheint in Google-Ergebnissen.",
           },
         },
         {
@@ -94,7 +101,7 @@ export const Pages: CollectionConfig = {
           type: "upload",
           relationTo: "media",
           admin: {
-            description: "Image used when sharing on social media (Open Graph).",
+            description: "Bild das beim Teilen auf Social Media angezeigt wird (Open Graph).",
           },
         },
       ],
@@ -105,6 +112,8 @@ export const Pages: CollectionConfig = {
       admin: {
         position: "sidebar",
         date: { pickerAppearance: "dayAndTime" },
+        description:
+          "Veröffentlichungsdatum. Wird automatisch gesetzt, wenn der Status auf 'Published' geändert wird.",
       },
       hooks: {
         beforeChange: [

@@ -9,6 +9,8 @@ export const Footer: GlobalConfig = {
   },
   admin: {
     group: "Navigation",
+    description:
+      "Fußzeile Ihrer Website. Organisieren Sie Links in Spalten und fügen Sie Social-Media-Profile hinzu.",
   },
   fields: [
     {
@@ -20,6 +22,10 @@ export const Footer: GlobalConfig = {
           name: "heading",
           type: "text",
           required: true,
+          admin: {
+            description:
+              "Überschrift der Spalte (z.B. 'Unternehmen', 'Leistungen').",
+          },
         },
         {
           name: "links",
@@ -41,19 +47,26 @@ export const Footer: GlobalConfig = {
       ],
       admin: {
         initCollapsed: true,
+        description:
+          "Link-Spalten im Footer. Maximal 4 Spalten mit je bis zu 6 Links.",
       },
     },
     {
       name: "copyright",
       type: "text",
       admin: {
-        description: "e.g. '2025 Your Company. All rights reserved.'",
+        description:
+          "Copyright-Text am unteren Rand (z.B. '© 2026 Meine Firma').",
       },
     },
     {
       name: "socialLinks",
       type: "array",
       maxRows: 6,
+      admin: {
+        description:
+          "Social-Media-Profile. Werden als Icons im Footer angezeigt.",
+      },
       fields: [
         {
           name: "platform",

@@ -6,6 +6,8 @@ export const Posts: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "slug", "category", "_status", "publishedAt"],
+    description:
+      "Blog-Beiträge und Artikel. Schreiben Sie regelmäßig, um bei Suchmaschinen besser gefunden zu werden.",
   },
   access: {
     read: authenticatedOrPublished,
@@ -32,30 +34,43 @@ export const Posts: CollectionConfig = {
       unique: true,
       admin: {
         position: "sidebar",
+        description:
+          "URL-Pfad des Beitrags (z.B. 'mein-erster-post' für /blog/mein-erster-post).",
       },
     },
     {
       name: "heroImage",
       type: "upload",
       relationTo: "media",
+      admin: {
+        description:
+          "Vorschaubild für den Beitrag. Wird in der Blog-Übersicht und beim Teilen angezeigt.",
+      },
     },
     {
       name: "excerpt",
       type: "textarea",
       admin: {
-        description: "Short summary shown in post listings.",
+        description:
+          "Kurze Zusammenfassung für die Blog-Übersicht. 1-2 Sätze die neugierig machen.",
       },
     },
     {
       name: "content",
       type: "richText",
       required: true,
+      admin: {
+        description:
+          "Der Hauptinhalt des Beitrags. Nutzen Sie Überschriften, Listen und Bilder für bessere Lesbarkeit.",
+      },
     },
     {
       name: "category",
       type: "select",
       admin: {
         position: "sidebar",
+        description:
+          "Kategorie für die Filterung und Organisation Ihrer Beiträge.",
       },
       options: [
         { label: "Blog", value: "blog" },
@@ -69,6 +84,8 @@ export const Posts: CollectionConfig = {
       relationTo: "users",
       admin: {
         position: "sidebar",
+        description:
+          "Verfasser des Beitrags. Wählen Sie einen registrierten Benutzer aus.",
       },
     },
     {
@@ -78,15 +95,25 @@ export const Posts: CollectionConfig = {
         {
           name: "title",
           type: "text",
+          admin: {
+            description:
+              "SEO-Titel für Suchmaschinen. Leer = Beitragstitel wird verwendet.",
+          },
         },
         {
           name: "description",
           type: "textarea",
+          admin: {
+            description: "SEO-Beschreibung (max. 160 Zeichen).",
+          },
         },
         {
           name: "image",
           type: "upload",
           relationTo: "media",
+          admin: {
+            description: "Social-Media-Vorschaubild (Open Graph).",
+          },
         },
       ],
     },
@@ -96,6 +123,8 @@ export const Posts: CollectionConfig = {
       admin: {
         position: "sidebar",
         date: { pickerAppearance: "dayAndTime" },
+        description:
+          "Veröffentlichungsdatum. Wird automatisch gesetzt bei Statuswechsel auf 'Published'.",
       },
       hooks: {
         beforeChange: [
