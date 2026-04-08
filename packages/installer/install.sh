@@ -359,6 +359,10 @@ deploy() {
   fi
   cd "$WORK_DIR"
 
+  # Remove upstream origin — this is now the customer's own project
+  git remote remove origin 2>/dev/null || true
+  git add -A && git commit -m "Initial OpenKERN setup" --quiet 2>/dev/null || true
+
   log_info "Selected theme: $TEMPLATE"
 
   # 2. Write environment config
@@ -492,6 +496,14 @@ EOL
   echo ""
   echo "  To redeploy after changes:"
   echo "    cd $WORK_DIR && bash packages/installer/deploy.sh"
+  echo ""
+  echo ""
+  echo -e "  ${BOLD}Eigenes Git-Repository einrichten:${NC}"
+  echo "  Dieses Projekt ist jetzt Ihres. Speichern Sie es in Ihrem eigenen Repository:"
+  echo ""
+  echo "    cd $WORK_DIR"
+  echo "    git remote add origin git@github.com:IHR-ACCOUNT/${PROJECT_NAME}.git"
+  echo "    git push -u origin main"
   echo ""
   echo "─────────────────────────────────────────────"
 }
