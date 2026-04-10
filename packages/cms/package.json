@@ -11,7 +11,9 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
-    "seed": "payload run src/seed/index.ts"
+    "seed": "payload run src/seed/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@opennextjs/aws": "^3.0.0",
@@ -31,12 +33,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.2",
-    "typescript": "^5.4.0"
+    "jsdom": "^29.0.2",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.4"
   },
   "engines": {
     "node": ">=20.9.0"
