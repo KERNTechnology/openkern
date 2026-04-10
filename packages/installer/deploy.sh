@@ -111,6 +111,23 @@ rm -rf "$SERVER_NM/@img/sharp-darwin-"* "$SERVER_NM/@img/sharp-libvips-darwin-"*
 (cd /tmp && curl -sL "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-${LIBVIPS_VERSION}.tgz" | tar xz && mv package "$SERVER_NM/@img/sharp-libvips-linux-x64")
 success "Sharp binaries added."
 
+# ── Step 2c: Copy AWS SDK packages to server function ───────────────────────
+# Turbopack externalizes @aws-sdk/* expecting them in node_modules at runtime,
+# but Lambda's built-in SDK doesn't include all sub-packages (e.g.
+# signature-v4-multi-region, util-endpoints). Copy them from the project.
+info "Adding AWS SDK packages to server function..."
+if [[ -d "$CMS_DIR/node_modules/@aws-sdk" ]]; then
+  cp -r "$CMS_DIR/node_modules/@aws-sdk" "$SERVER_NM/@aws-sdk" 2>/dev/null || true
+  # Also copy @smithy (AWS SDK v3 internal dependency)
+  if [[ -d "$CMS_DIR/node_modules/@smithy" ]]; then
+    cp -r "$CMS_DIR/node_modules/@smithy" "$SERVER_NM/@smithy" 2>/dev/null || true
+  fi
+  AWS_PKG_COUNT=$(find "$SERVER_NM/@aws-sdk" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  success "AWS SDK packages added ($AWS_PKG_COUNT packages)."
+else
+  info "No @aws-sdk packages found in node_modules — skipping."
+fi
+
 # ── Step 3: Upload static assets to S3 ───────────────────────────────────────
 info "Uploading static assets to S3..."
 
