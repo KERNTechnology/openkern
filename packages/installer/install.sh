@@ -542,7 +542,8 @@ deploy() {
 
   # Remove upstream origin — this is now the customer's own project
   git remote remove origin 2>/dev/null || true
-  git add -A && git commit -m "Initial OpenKERN setup" --quiet 2>/dev/null || true
+  git add -A
+  git commit -m "Initial OpenKERN setup" --quiet 2>/dev/null || true
 
   log_info "Selected theme: $TEMPLATE"
 
