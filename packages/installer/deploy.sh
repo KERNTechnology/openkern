@@ -117,10 +117,11 @@ success "Sharp binaries added."
 # signature-v4-multi-region, util-endpoints). Copy them from the project.
 info "Adding AWS SDK packages to server function..."
 if [[ -d "$CMS_DIR/node_modules/@aws-sdk" ]]; then
-  cp -r "$CMS_DIR/node_modules/@aws-sdk" "$SERVER_NM/@aws-sdk" 2>/dev/null || true
+  mkdir -p "$SERVER_NM/@aws-sdk" "$SERVER_NM/@smithy"
+  cp -rf "$CMS_DIR/node_modules/@aws-sdk/"* "$SERVER_NM/@aws-sdk/" 2>/dev/null || true
   # Also copy @smithy (AWS SDK v3 internal dependency)
   if [[ -d "$CMS_DIR/node_modules/@smithy" ]]; then
-    cp -r "$CMS_DIR/node_modules/@smithy" "$SERVER_NM/@smithy" 2>/dev/null || true
+    cp -rf "$CMS_DIR/node_modules/@smithy/"* "$SERVER_NM/@smithy/" 2>/dev/null || true
   fi
   AWS_PKG_COUNT=$(find "$SERVER_NM/@aws-sdk" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
   success "AWS SDK packages added ($AWS_PKG_COUNT packages)."
