@@ -102,7 +102,9 @@ info "Sharp version: $SHARP_VERSION, libvips: $LIBVIPS_VERSION"
 
 mkdir -p "$SERVER_NM/@img"
 cp -r "$CMS_DIR/node_modules/sharp" "$SERVER_NM/sharp" 2>/dev/null || true
-# Remove non-linux platform binaries
+# Copy all @img packages (colour, sharp binaries, etc.)
+cp -rf "$CMS_DIR/node_modules/@img/"* "$SERVER_NM/@img/" 2>/dev/null || true
+# Remove non-linux platform binaries (keep colour and other non-platform packages)
 rm -rf "$SERVER_NM/@img/sharp-darwin-"* "$SERVER_NM/@img/sharp-libvips-darwin-"* \
        "$SERVER_NM/@img/sharp-linux-arm64" "$SERVER_NM/@img/sharp-libvips-linux-arm64" \
        "$SERVER_NM/@img/sharp-linux-x64" "$SERVER_NM/@img/sharp-libvips-linux-x64"
