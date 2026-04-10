@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
-export default defineConfig({
+const config = defineConfig({
   test: {
     include: ["src/**/__tests__/**/*.test.{ts,tsx}"],
     environment: "jsdom",
@@ -16,8 +16,11 @@ export default defineConfig({
       "@payload-config": path.resolve(__dirname, "src/payload.config.ts"),
     },
   },
-  // Override jsx: "preserve" from Next.js tsconfig for Vitest/oxc
-  oxc: {
-    jsx: "automatic",
-  },
 });
+
+// Vitest 4 / Vite 8 uses oxc for JSX transformation. Next.js tsconfig
+// sets jsx: "preserve" which oxc cannot parse. Override to "automatic".
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(config as any).oxc = { jsx: "automatic" };
+
+export default config;
