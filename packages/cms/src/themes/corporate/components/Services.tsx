@@ -1,9 +1,5 @@
 import type { ServicesProps } from '@/themes/types'
-
-const ICONS: Record<string, string> = {
-  palette: '\uD83C\uDFA8', code: '\uD83D\uDCBB', megaphone: '\uD83D\uDCE3', 'pen-tool': '\u270F\uFE0F',
-  globe: '\uD83C\uDF0D', chart: '\uD83D\uDCCA', shield: '\uD83D\uDEE1\uFE0F', zap: '\u26A1',
-}
+import { ServiceIcon } from '@/themes/shared/ServiceIcon'
 
 export function Services({ headline, subheadline, services }: ServicesProps) {
   return (
@@ -16,7 +12,7 @@ export function Services({ headline, subheadline, services }: ServicesProps) {
         <div className="t-services__grid">
           {services.map((s, i) => (
             <div key={i} className="t-service-card">
-              {s.icon && <div className="t-service-card__icon">{ICONS[s.icon] || '\u25CF'}</div>}
+              {s.icon && <div className="t-service-card__icon"><ServiceIcon name={s.icon} /></div>}
               <h3 className="t-service-card__title">{s.title}</h3>
               <p className="t-service-card__desc">{s.description}</p>
             </div>
