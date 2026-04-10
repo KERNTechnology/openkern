@@ -2,7 +2,7 @@
 
 Professional tier adds VPC, Aurora Serverless v2, and optional ECS Fargate to the customer's own AWS account.
 
-**Status:** Planned for Phase 2. Use `openkern upgrade` to migrate from Starter.
+**Status:** Coming soon. [Join the waitlist](https://install.openkern.org/professional.html).
 
 ## Additional Resources (vs. Starter)
 

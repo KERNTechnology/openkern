@@ -189,7 +189,7 @@ Your AWS Account
 
 **Your AWS costs:** ~$75+/month (Aurora ~$43, NAT Gateway ~$32, compute varies)
 
-**Upgrade path:** `openkern upgrade` migrates from Starter to Professional (zero data loss, automated via pg_dump/pg_restore).
+**Status:** Coming soon. [Join the waitlist](https://install.openkern.org/professional.html).
 
 ---
 
@@ -337,7 +337,7 @@ Anyone who wants a modern CMS on their own AWS infrastructure. Developers, agenc
 Your database on KERN's Aurora is fully isolated (own PostgreSQL database, own credentials, SSL-only). Starter is for publishing content — blog posts, pages, media. For full data sovereignty, upgrade to Professional.
 
 **Can I migrate from Starter to Professional?**
-Yes. `openkern upgrade` provisions Aurora on your AWS, migrates data, updates config. Zero data loss.
+Yes. When Professional launches, migration will be automated — no data loss. [Join the waitlist](https://install.openkern.org/professional.html).
 
 **What if I need to leave KERN?**
 Everything is on your AWS account. The code is open source. Export the database with `pg_dump` and point Payload at your own PostgreSQL instance.

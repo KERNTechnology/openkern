@@ -103,10 +103,4 @@ To tear down all deployed resources:
 
 ## Upgrading to Professional
 
-When you need full data sovereignty or higher performance:
-
-```bash
-openkern upgrade
-```
-
-This provisions Aurora Serverless v2 on your own AWS account, migrates your data, and updates the configuration. No data loss, no downtime.
+Professional is coming soon. Join the waitlist at [install.openkern.org/professional.html](https://install.openkern.org/professional.html) to be notified when it's available.
