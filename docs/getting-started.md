@@ -6,7 +6,7 @@ OpenKERN deploys a Payload CMS website on your AWS account. The Starter tier use
 
 ## Prerequisites
 
-1. **macOS** (the installer currently supports macOS only)
+1. **macOS, Linux, or Windows (WSL)**
 2. **AWS account** with CLI configured (`aws configure`)
 3. **Node.js >= 20** installed
 4. **Pulumi CLI** installed (`curl -fsSL https://get.pulumi.com | sh`)
