@@ -113,7 +113,7 @@ setup() {
 @test "print_banner shows version" {
   run print_banner
   [ "$status" -eq 0 ]
-  [[ "$output" == *"OpenKERN"* ]]
+  [[ "$output" == *"Self-installable"* ]]
   [[ "$output" == *"0.1.0"* ]]
 }
 
