@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/KERNTechnology/openkern/actions/workflows/ci.yml/badge.svg)](https://github.com/KERNTechnology/openkern/actions/workflows/ci.yml)
 [![License: BSL 1.1](https://img.shields.io/badge/license-BSL%201.1-blue.svg)](LICENSE)
-[![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.79.1-6366f1.svg)](https://payloadcms.com)
-[![Next.js](https://img.shields.io/badge/Next.js-15.4-black.svg)](https://nextjs.org)
+[![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.81.0-6366f1.svg)](https://payloadcms.com)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 
 **Modern web publishing stack on your own AWS. Open source. One command.**
 
@@ -19,7 +19,7 @@ Built by [KERN](https://www.kern.technology) as the foundation for client projec
 ## What You Get
 
 - **Payload CMS 3.x** — headless CMS with visual editing, built on Next.js
-- **Next.js 15** — App Router, server components, static + dynamic rendering
+- **Next.js 16** — App Router, server components, static + dynamic rendering
 - **AWS infrastructure** — Lambda, S3, CloudFront, deployed via Pulumi (TypeScript)
 - **Starter templates** — ready-to-use designs for agencies and landing pages
 
@@ -132,7 +132,7 @@ NODE_TLS_REJECT_UNAUTHORIZED=0 npx payload migrate
 
 **Important:**
 - Always test `npm run build` locally before deploying
-- Major version updates (e.g. Payload 3 → 4, Next.js 15 → 16) may require code changes — check the release notes
+- Major version updates (e.g. Payload 3 → 4, Next.js 16 → 17) may require code changes — check the release notes
 - Follow [@KERNTechnology on GitHub](https://github.com/KERNTechnology/openkern/releases) for OpenKERN-specific update notes
 
 ---
@@ -230,7 +230,7 @@ openkern/
 | Layer | Technology | Why |
 |---|---|---|
 | CMS | Payload CMS 3.x | Open source, TypeScript-native, built on Next.js |
-| Frontend | Next.js 15 (App Router) | Payload runs natively inside it — single deployment |
+| Frontend | Next.js 16 (App Router) | Payload runs natively inside it — single deployment |
 | Database (Starter) | KERN Managed Aurora | Zero cost, zero setup for the customer |
 | Database (Pro) | Aurora Serverless v2 | Full control, scales with demand |
 | Media Storage | S3 + Payload S3 Adapter | Your files on your account |

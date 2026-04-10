@@ -88,8 +88,8 @@ Everything runs on the customer's AWS account. Full data sovereignty. No externa
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| CMS | Payload 3.79.1 | TypeScript-native, runs inside Next.js, open source |
-| Framework | Next.js 15.4 | App Router, SSR + static, Payload's native runtime |
+| CMS | Payload 3.81.0 | TypeScript-native, runs inside Next.js, open source |
+| Framework | Next.js 16 | App Router, SSR + static, Payload's native runtime |
 | Serverless adapter | OpenNext | Deploys Next.js to Lambda with proper routing |
 | IaC | Pulumi (TypeScript) | Same language as the application code |
 | Database | PostgreSQL (Aurora) | Payload's recommended adapter, relational queries |
