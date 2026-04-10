@@ -4,6 +4,7 @@
 [![License: BSL 1.1](https://img.shields.io/badge/license-BSL%201.1-blue.svg)](LICENSE)
 [![Payload CMS](https://img.shields.io/badge/Payload%20CMS-3.81.0-6366f1.svg)](https://payloadcms.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
+[![Tests](https://img.shields.io/badge/tests-114-brightgreen.svg)](#testing)
 
 **Modern web publishing stack on your own AWS. Open source. One command.**
 
@@ -237,6 +238,37 @@ openkern/
 | CDN | CloudFront | Fast, cheap, AWS-native |
 | Compute | Lambda via OpenNext | Serverless, $0 at idle |
 | IaC | Pulumi (TypeScript) | Same language as the rest of the stack |
+
+---
+
+## Testing
+
+OpenKERN has 114+ automated tests across all layers. Every push triggers CI.
+
+```bash
+# CMS unit tests (themes, access control, BlockRenderer, seed helpers)
+cd packages/cms && npm test
+
+# Installer tests (preflight, OS detection, argument parsing)
+bats packages/installer/test/
+
+# Shellcheck (strict, no warnings allowed)
+shellcheck packages/installer/install.sh packages/installer/deploy.sh packages/installer/cleanup.sh
+```
+
+| Layer | Framework | Tests | What's covered |
+|---|---|---|---|
+| CMS | Vitest + React Testing Library | 46 | Theme resolution, access control, block rendering, media resolution, Lexical seed helpers |
+| Installer | bats-core | 36 | Preflight checks, OS/WSL detection, argument parsing, dependency auto-install, logging |
+| Installer | Shellcheck | 3 scripts | Strict lint, zero warnings |
+| Infrastructure | TypeScript | tsc | Type safety for all Pulumi resources |
+
+CI runs on every push and pull request:
+1. **Lint & Type Check** — ESLint + TypeScript
+2. **Unit Tests** — Vitest (46 tests)
+3. **Build** — Next.js + OpenNext (ensures deployable artifact)
+4. **Infra Check** — Pulumi TypeScript validation
+5. **Installer Lint & Test** — Shellcheck strict + bats (36 tests)
 
 ---
 
