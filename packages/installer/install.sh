@@ -719,7 +719,8 @@ main() {
   deploy
 }
 
-# Allow sourcing without execution (for testing)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# Allow sourcing without execution (for testing).
+# When piped via curl|bash, BASH_SOURCE is empty — default to running main.
+if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]]; then
   main "$@"
 fi
