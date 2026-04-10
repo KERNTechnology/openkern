@@ -720,7 +720,8 @@ main() {
 }
 
 # Allow sourcing without execution (for testing).
-# When piped via curl|bash, BASH_SOURCE is empty — default to running main.
-if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]]; then
+# When sourced, BASH_SOURCE[0] differs from $0. When piped via curl|bash
+# or executed directly, they match (or BASH_SOURCE is empty) — run main.
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
