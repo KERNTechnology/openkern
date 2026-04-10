@@ -11,12 +11,14 @@ VERSION="0.1.0"
 OPENKERN_REPO="https://github.com/KERNTechnology/openkern"
 KERN_API_URL="https://api.openkern.org"
 LOCAL_REPO=""
+AUTO_DEPS=false
 
 # Parse global flags (before any subcommand)
 while [[ $# -gt 0 ]]; do
   case $1 in
     --local) LOCAL_REPO="$(cd "$2" && pwd)"; shift 2 ;;
     --api-url) KERN_API_URL="$2"; shift 2 ;;
+    --auto-deps) AUTO_DEPS=true; shift ;;
     *) break ;;
   esac
 done
@@ -48,6 +50,185 @@ log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_ok() { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+# ─── OS Detection ───────────────────────────────────────────────────────────
+
+detect_os() {
+  OS_TYPE="unknown"
+  OS_DISTRO="unknown"
+  PKG_MANAGER=""
+  IS_WSL=false
+
+  case "$(uname -s)" in
+    Linux)
+      OS_TYPE="linux"
+      if [[ -f /proc/version ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+        IS_WSL=true
+      fi
+      if command -v apt-get &>/dev/null; then
+        OS_DISTRO="debian"
+        PKG_MANAGER="apt-get"
+      elif command -v dnf &>/dev/null; then
+        OS_DISTRO="fedora"
+        PKG_MANAGER="dnf"
+      elif command -v yum &>/dev/null; then
+        OS_DISTRO="rhel"
+        PKG_MANAGER="yum"
+      elif command -v apk &>/dev/null; then
+        OS_DISTRO="alpine"
+        PKG_MANAGER="apk"
+      fi
+      ;;
+    Darwin)
+      OS_TYPE="macos"
+      OS_DISTRO="macos"
+      if command -v brew &>/dev/null; then
+        PKG_MANAGER="brew"
+      fi
+      ;;
+  esac
+}
+
+# ─── Auto-install Dependencies (Linux) ─────────────────────────────────────
+
+auto_install_node() {
+  log_info "Installing Node.js 20 via NodeSource..."
+  case "$PKG_MANAGER" in
+    apt-get)
+      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+      ;;
+    dnf)
+      curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+      sudo dnf install -y nodejs
+      ;;
+    yum)
+      curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+      sudo yum install -y nodejs
+      ;;
+    apk)
+      sudo apk add --no-cache nodejs npm
+      ;;
+    *)
+      log_error "Cannot auto-install Node.js — unknown package manager."
+      log_error "Install manually: https://nodejs.org"
+      return 1
+      ;;
+  esac
+}
+
+auto_install_aws_cli() {
+  log_info "Installing AWS CLI v2..."
+  case "$OS_TYPE" in
+    linux)
+      local tmpdir
+      tmpdir="$(mktemp -d)"
+      curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "$tmpdir/awscliv2.zip"
+      unzip -q "$tmpdir/awscliv2.zip" -d "$tmpdir"
+      sudo "$tmpdir/aws/install"
+      rm -rf "$tmpdir"
+      ;;
+    *)
+      log_error "Cannot auto-install AWS CLI on $OS_TYPE."
+      log_error "Install manually: https://aws.amazon.com/cli/"
+      return 1
+      ;;
+  esac
+}
+
+auto_install_pulumi() {
+  log_info "Installing Pulumi..."
+  curl -fsSL https://get.pulumi.com | sh
+  # Add Pulumi to PATH for this session
+  export PATH="$HOME/.pulumi/bin:$PATH"
+}
+
+auto_install_deps() {
+  local missing=()
+
+  if ! command -v node &>/dev/null; then
+    missing+=("node")
+  else
+    local major
+    major=$(node --version 2>/dev/null | sed 's/v//' | cut -d. -f1)
+    if [[ "$major" -lt 20 ]]; then
+      missing+=("node")
+    fi
+  fi
+
+  if ! command -v aws &>/dev/null; then
+    missing+=("aws")
+  fi
+
+  if ! command -v pulumi &>/dev/null; then
+    missing+=("pulumi")
+  fi
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    log_ok "All dependencies already installed."
+    return 0
+  fi
+
+  log_info "Missing dependencies: ${missing[*]}"
+
+  if [[ "$OS_TYPE" != "linux" ]]; then
+    log_warn "Auto-install is only supported on Linux."
+    log_warn "Please install the missing dependencies manually."
+    return 1
+  fi
+
+  echo ""
+  log_info "The following will be installed:"
+  for dep in "${missing[@]}"; do
+    case "$dep" in
+      node)   echo "  - Node.js 20 (via NodeSource)" ;;
+      aws)    echo "  - AWS CLI v2 (official installer)" ;;
+      pulumi) echo "  - Pulumi CLI (via get.pulumi.com)" ;;
+    esac
+  done
+  echo ""
+
+  local proceed
+  read -r -p "$(echo -e "${BOLD}Install now? (yes/no)${NC} [yes]: ")" proceed < /dev/tty
+  if [[ "$proceed" != "yes" && "$proceed" != "y" && -n "$proceed" ]]; then
+    log_info "Skipped. Install dependencies manually and re-run."
+    return 1
+  fi
+
+  for dep in "${missing[@]}"; do
+    case "$dep" in
+      node)   auto_install_node ;;
+      aws)    auto_install_aws_cli ;;
+      pulumi) auto_install_pulumi ;;
+    esac
+  done
+
+  log_ok "Dependencies installed."
+}
+
+# ─── WSL Hints ──────────────────────────────────────────────────────────────
+
+show_wsl_hints() {
+  if [[ "$IS_WSL" != true ]]; then
+    return 0
+  fi
+
+  echo ""
+  echo -e "${YELLOW}─── WSL Detected ────────────────────────────────────${NC}"
+  echo ""
+  echo "  You're running inside Windows Subsystem for Linux."
+  echo "  A few things to keep in mind:"
+  echo ""
+  echo "  - AWS credentials: If you configured AWS CLI in Windows,"
+  echo "    you may need to configure it again inside WSL."
+  echo "    Run: aws configure"
+  echo ""
+  echo "  - After deployment, your site is accessible from Windows"
+  echo "    at the CloudFront URL (no localhost tunneling needed)."
+  echo ""
+  echo -e "${YELLOW}─────────────────────────────────────────────────────${NC}"
+  echo ""
+}
 
 # ─── Preflight Checks ───────────────────────────────────────────────────────
 
@@ -327,8 +508,8 @@ deploy() {
   PAYLOAD_SECRET_KEY=$(openssl rand -hex 32)
   # Ensure sslmode=no-verify — Aurora RDS certs are not in Node.js default trust store.
   local DATABASE_URI
-  if echo "$KERN_DATABASE_URI" | grep -q "sslmode="; then
-    DATABASE_URI=$(echo "$KERN_DATABASE_URI" | sed 's/sslmode=[^&]*/sslmode=no-verify/')
+  if [[ "$KERN_DATABASE_URI" == *"sslmode="* ]]; then
+    DATABASE_URI="${KERN_DATABASE_URI/sslmode=*/sslmode=no-verify}"
   else
     DATABASE_URI="${KERN_DATABASE_URI}?sslmode=no-verify"
   fi
@@ -512,7 +693,24 @@ EOL
 
 main() {
   print_banner
+  detect_os
+
+  if [[ "$IS_WSL" == true ]]; then
+    log_info "Running on WSL (Windows Subsystem for Linux)"
+  elif [[ "$OS_TYPE" == "linux" ]]; then
+    log_info "Running on Linux ($OS_DISTRO)"
+  elif [[ "$OS_TYPE" == "macos" ]]; then
+    log_info "Running on macOS"
+  fi
+  echo ""
+
+  if [[ "$AUTO_DEPS" == true ]]; then
+    auto_install_deps
+    echo ""
+  fi
+
   preflight
+  show_wsl_hints
   prompt_kern_token
   prompt_project
   prompt_admin
@@ -520,4 +718,7 @@ main() {
   deploy
 }
 
-main "$@"
+# Allow sourcing without execution (for testing)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

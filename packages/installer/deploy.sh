@@ -96,7 +96,7 @@ SHARP_VERSION=$(node -p "require('$CMS_DIR/node_modules/sharp/package.json').ver
 LIBVIPS_VERSION=$(node -p "try{require('$CMS_DIR/node_modules/@img/sharp-darwin-arm64/package.json').optionalDependencies['@img/sharp-libvips-darwin-arm64']||''}catch{''}" 2>/dev/null || echo "")
 if [[ -z "$LIBVIPS_VERSION" ]]; then
   # Fallback: read from any available platform binary
-  LIBVIPS_VERSION=$(ls "$CMS_DIR/node_modules/@img/" 2>/dev/null | grep "sharp-libvips" | head -1 | xargs -I{} node -p "require('$CMS_DIR/node_modules/@img/{}/package.json').version" 2>/dev/null || echo "8.15.5")
+  LIBVIPS_VERSION=$(for d in "$CMS_DIR/node_modules/@img/sharp-libvips-"*/; do [ -d "$d" ] && node -p "require('${d}package.json').version" 2>/dev/null && break; done || echo "8.15.5")
 fi
 info "Sharp version: $SHARP_VERSION, libvips: $LIBVIPS_VERSION"
 

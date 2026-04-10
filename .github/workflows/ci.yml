@@ -104,14 +104,23 @@ jobs:
         run: npx tsc --noEmit
 
   installer-check:
-    name: Installer Syntax Check
+    name: Installer Lint & Test
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Shellcheck install.sh
-        run: shellcheck packages/installer/install.sh || true
+        run: shellcheck packages/installer/install.sh
 
       - name: Shellcheck deploy.sh
-        run: shellcheck packages/installer/deploy.sh || true
+        run: shellcheck packages/installer/deploy.sh
+
+      - name: Shellcheck cleanup.sh
+        run: shellcheck packages/installer/cleanup.sh
+
+      - name: Install bats-core
+        run: sudo apt-get install -y bats
+
+      - name: Run installer tests
+        run: bats packages/installer/test/

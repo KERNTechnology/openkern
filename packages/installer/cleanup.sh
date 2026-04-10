@@ -335,9 +335,11 @@ for entry in ${DISTRIBUTIONS[@]+"${DISTRIBUTIONS[@]}"}; do
 
     # Get new ETag after disabling
     ETAG=$(aws cloudfront get-distribution-config --id "$id" --query "ETag" --output text 2>/dev/null || true)
-    aws cloudfront delete-distribution --id "$id" --if-match "$ETAG" 2>/dev/null && \
-      ok "Deleted CloudFront distribution $id" || \
+    if aws cloudfront delete-distribution --id "$id" --if-match "$ETAG" 2>/dev/null; then
+      ok "Deleted CloudFront distribution $id"
+    else
       warn "Could not delete CloudFront $id — may still be deploying. Retry later."
+    fi
   fi
 done
 
@@ -348,21 +350,26 @@ for entry in ${APIS[@]+"${APIS[@]}"}; do
   # Delete stages first
   STAGES=$(aws apigatewayv2 get-stages --api-id "$id" --region "$REGION" --query "Items[].StageName" --output text 2>/dev/null || true)
   for stage in $STAGES; do
-    [[ "$stage" == '$default' ]] && continue # $default stage is deleted with the API
+    # shellcheck disable=SC2016 # $default is a literal AWS stage name
+    [[ "$stage" == '$default' ]] && continue
     aws apigatewayv2 delete-stage --api-id "$id" --stage-name "$stage" --region "$REGION" 2>/dev/null || true
   done
-  aws apigatewayv2 delete-api --api-id "$id" --region "$REGION" 2>/dev/null && \
-    ok "Deleted API Gateway $id" || \
+  if aws apigatewayv2 delete-api --api-id "$id" --region "$REGION" 2>/dev/null; then
+    ok "Deleted API Gateway $id"
+  else
     warn "Could not delete API Gateway $id"
+  fi
 done
 
 # 3. Delete Lambda functions
 for entry in ${LAMBDAS[@]+"${LAMBDAS[@]}"}; do
   IFS='|' read -r fn site <<< "$entry"
   info "Deleting Lambda function $fn..."
-  aws lambda delete-function --function-name "$fn" --region "$REGION" 2>/dev/null && \
-    ok "Deleted Lambda $fn" || \
+  if aws lambda delete-function --function-name "$fn" --region "$REGION" 2>/dev/null; then
+    ok "Deleted Lambda $fn"
+  else
     warn "Could not delete Lambda $fn"
+  fi
 done
 
 # 4. Empty and delete S3 buckets
@@ -383,9 +390,11 @@ for entry in ${BUCKETS[@]+"${BUCKETS[@]}"}; do
   fi
 
   info "Deleting S3 bucket $bucket..."
-  aws s3api delete-bucket --bucket "$bucket" --region "$REGION" 2>/dev/null && \
-    ok "Deleted S3 bucket $bucket" || \
+  if aws s3api delete-bucket --bucket "$bucket" --region "$REGION" 2>/dev/null; then
+    ok "Deleted S3 bucket $bucket"
+  else
     warn "Could not delete S3 bucket $bucket — may have remaining objects"
+  fi
 done
 
 # 5. Delete IAM roles (must detach policies first)
@@ -405,27 +414,33 @@ for entry in ${ROLES[@]+"${ROLES[@]}"}; do
     aws iam delete-role-policy --role-name "$role" --policy-name "$policy_name" 2>/dev/null || true
   done
 
-  aws iam delete-role --role-name "$role" 2>/dev/null && \
-    ok "Deleted IAM role $role" || \
+  if aws iam delete-role --role-name "$role" 2>/dev/null; then
+    ok "Deleted IAM role $role"
+  else
     warn "Could not delete IAM role $role"
+  fi
 done
 
 # 6. Delete CloudWatch log groups
 for entry in ${LOGGROUPS[@]+"${LOGGROUPS[@]}"}; do
   IFS='|' read -r lg site <<< "$entry"
   info "Deleting log group $lg..."
-  aws logs delete-log-group --log-group-name "$lg" --region "$REGION" 2>/dev/null && \
-    ok "Deleted log group $lg" || \
+  if aws logs delete-log-group --log-group-name "$lg" --region "$REGION" 2>/dev/null; then
+    ok "Deleted log group $lg"
+  else
     warn "Could not delete log group $lg"
+  fi
 done
 
 # 7. Delete Secrets Manager secrets
 for entry in ${SECRETS[@]+"${SECRETS[@]}"}; do
   IFS='|' read -r name arn <<< "$entry"
   info "Deleting secret $name..."
-  aws secretsmanager delete-secret --secret-id "$name" --force-delete-without-recovery --region "$REGION" 2>/dev/null && \
-    ok "Deleted secret $name" || \
+  if aws secretsmanager delete-secret --secret-id "$name" --force-delete-without-recovery --region "$REGION" 2>/dev/null; then
+    ok "Deleted secret $name"
+  else
     warn "Could not delete secret $name"
+  fi
 done
 
 # ── Done ─────────────────────────────────────────────────────────────────────
