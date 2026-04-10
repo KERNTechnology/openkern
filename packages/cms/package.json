@@ -16,6 +16,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@aws-sdk/signature-v4-multi-region": "^3.996.16",
     "@opennextjs/aws": "^3.0.0",
     "@payloadcms/db-postgres": "3.81.0",
     "@payloadcms/next": "3.81.0",
