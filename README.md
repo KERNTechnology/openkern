@@ -304,6 +304,24 @@ Re-run the deploy script to upload assets to S3 and invalidate CloudFront:
 cd packages/installer && ./deploy.sh
 ```
 
+### Checking Lambda logs
+
+If your site returns an error, check the Lambda logs to see what went wrong:
+```bash
+# Find your log groups (replace my-site with your project name)
+aws logs describe-log-groups --region eu-central-1 \
+  --log-group-name-prefix "/aws/lambda/my-site" \
+  --query "logGroups[].logGroupName" --output table
+
+# Show recent errors (last 5 minutes)
+aws logs filter-log-events \
+  --log-group-name "/aws/lambda/my-site-server-XXXXXXX" \
+  --start-time $(( $(date +%s) - 300 ))000 \
+  --region eu-central-1 \
+  --filter-pattern "ERROR" \
+  --query "events[].message" --output text
+```
+
 ### Need help?
 
 Contact **support@kern.technology** with your project name, error output, and AWS region.

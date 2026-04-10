@@ -61,6 +61,38 @@ git remote add origin git@github.com:your-org/your-site.git
 git push -u origin main
 ```
 
+## Troubleshooting
+
+If your site shows an error after deployment, check the Lambda logs:
+
+```bash
+# 1. Find your Lambda functions
+aws lambda list-functions --region eu-central-1 \
+  --query "Functions[?starts_with(FunctionName, '<YOUR-PROJECT-NAME>')].FunctionName" \
+  --output table
+
+# 2. Find the log groups
+aws logs describe-log-groups --region eu-central-1 \
+  --log-group-name-prefix "/aws/lambda/<YOUR-PROJECT-NAME>" \
+  --query "logGroups[].logGroupName" --output table
+
+# 3. Show recent errors (last 5 minutes)
+aws logs filter-log-events \
+  --log-group-name "/aws/lambda/<YOUR-FUNCTION-NAME>" \
+  --start-time $(( $(date +%s) - 300 ))000 \
+  --region eu-central-1 \
+  --filter-pattern "ERROR" \
+  --query "events[].message" --output text
+```
+
+Replace `<YOUR-PROJECT-NAME>` with the project name you chose during installation (e.g. `my-site`).
+
+Common issues:
+
+- **Internal Server Error after deploy** — usually a missing module. Redeploy with `bash packages/installer/deploy.sh`
+- **CloudFront returns 403** — the distribution may still be deploying. Wait 2-3 minutes and try again
+- **Database connection error** — check that your API token is valid and the KERN database is reachable
+
 ## Cleanup
 
 To tear down all deployed resources:
