@@ -26,7 +26,7 @@ jobs:
           path-to-signatures: ".github/cla-signatures.json"
           path-to-document: "https://github.com/KERNTechnology/openkern/blob/main/CLA.md"
           branch: main
-          allowlist: dependabot[bot],dependabot,github-actions[bot],github-actions
+          allowlist: nice-basti,dependabot[bot],dependabot,github-actions[bot],github-actions
           custom-notsigned-prcomment: |
             Vielen Dank für deinen Beitrag! Bevor wir diesen PR mergen können, musst du den [Contributor License Agreement (CLA)](https://github.com/KERNTechnology/openkern/blob/main/CLA.md) unterzeichnen.
 
