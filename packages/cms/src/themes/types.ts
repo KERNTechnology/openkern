@@ -1,4 +1,9 @@
 import type { ReactNode } from 'react'
+import type {
+  TeamMemberCardProps,
+  TeamMemberDetailProps,
+  TeamBlockProps,
+} from '@/templates/team/types'
 
 export type ThemeName = 'minimal' | 'bold' | 'corporate'
 
@@ -110,4 +115,7 @@ export interface ThemeComponents {
   CTA: React.ComponentType<CTAProps>
   BlogCard: React.ComponentType<BlogCardProps>
   PageLayout: React.ComponentType<PageLayoutProps>
+  TeamCard?: React.ComponentType<TeamMemberCardProps>
+  TeamDetail?: React.ComponentType<TeamMemberDetailProps>
+  TeamBlock?: React.ComponentType<TeamBlockProps>
 }

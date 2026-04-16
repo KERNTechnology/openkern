@@ -10,6 +10,7 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Pages } from "./collections/Pages";
 import { Posts } from "./collections/Posts";
+import { TeamMembers } from "./templates/team/collection";
 import { Header } from "./globals/Header";
 import { Footer } from "./globals/Footer";
 import { SiteSettings } from "./globals/SiteSettings";
@@ -35,7 +36,7 @@ export default buildConfig({
     },
   }),
 
-  collections: [Users, Media, Pages, Posts],
+  collections: [Users, Media, Pages, Posts, TeamMembers],
   globals: [Header, Footer, SiteSettings],
 
   secret: process.env.PAYLOAD_SECRET || "",
