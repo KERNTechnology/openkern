@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     pages: Page;
     posts: Post;
+    'team-members': TeamMember;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -130,13 +132,24 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Benutzer mit Zugriff auf das Admin-Panel. Jeder Benutzer hat eine Rolle (Admin oder Editor).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * Admin: voller Zugriff. Editor: kann Inhalte bearbeiten, aber keine Einstellungen ändern.
+   */
   role: 'admin' | 'editor';
+  /**
+   * Vorname des Benutzers.
+   */
   firstName?: string | null;
+  /**
+   * Nachname des Benutzers.
+   */
   lastName?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -158,12 +171,20 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Bilder und Dokumente. Alle Dateien werden auf Ihrem eigenen AWS S3 gespeichert.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * Alternativtext für Barrierefreiheit und SEO. Beschreiben Sie kurz, was auf dem Bild zu sehen ist.
+   */
   alt: string;
+  /**
+   * Optionale Bildunterschrift.
+   */
   caption?: string | null;
   prefix?: string | null;
   updatedAt: string;
@@ -213,16 +234,24 @@ export interface Media {
   };
 }
 /**
+ * Verwalten Sie Ihre Website-Seiten. Jede Seite hat eine eigene URL (Slug) und kann mit Layout-Blöcken oder Freitext gestaltet werden.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
 export interface Page {
   id: number;
   title: string;
+  /**
+   * URL-Pfad der Seite (z.B. 'leistungen' für /leistungen). Wird automatisch in der Adresszeile verwendet.
+   */
   slug: string;
+  /**
+   * Optionales Titelbild für die Seite.
+   */
   heroImage?: (number | null) | Media;
   /**
-   * Page layout using content blocks. Use this for structured pages like the homepage.
+   * Seitenlayout mit Inhaltsblöcken. Nutzen Sie dies für strukturierte Seiten wie die Startseite. Blöcke können per Drag & Drop angeordnet werden.
    */
   layout?:
     | (
@@ -320,10 +349,29 @@ export interface Page {
             blockName?: string | null;
             blockType: 'richtext';
           }
+        | {
+            headline: string;
+            subheadline?: string | null;
+            /**
+             * Pick specific members, or leave empty to show all.
+             */
+            members?: (number | TeamMember)[] | null;
+            /**
+             * Max members to display (0 = all).
+             */
+            limit?: number | null;
+            /**
+             * Show link to the full /team page.
+             */
+            showLink?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'team';
+          }
       )[]
     | null;
   /**
-   * Simple rich text content. Use this for basic pages like About or Contact.
+   * Freitext-Inhalt mit dem Rich-Text-Editor. Nutzen Sie dies für einfache Seiten wie Über uns oder Kontakt.
    */
   content?: {
     root: {
@@ -342,36 +390,141 @@ export interface Page {
   } | null;
   meta?: {
     /**
-     * Overrides the page title for SEO. Leave blank to use the page title.
+     * Überschreibt den Seitentitel für Suchmaschinen. Leer lassen, um den Seitentitel zu verwenden.
      */
     title?: string | null;
     /**
-     * Short description for search engines (max 160 characters).
+     * Kurzbeschreibung für Suchmaschinen (max. 160 Zeichen). Erscheint in Google-Ergebnissen.
      */
     description?: string | null;
     /**
-     * Image used when sharing on social media (Open Graph).
+     * Bild das beim Teilen auf Social Media angezeigt wird (Open Graph).
      */
     image?: (number | null) | Media;
   };
+  /**
+   * Veröffentlichungsdatum. Wird automatisch gesetzt, wenn der Status auf 'Published' geändert wird.
+   */
   publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Team members displayed on the website. Drag the "order" field to control sort order.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-members".
+ */
+export interface TeamMember {
+  id: number;
+  name: string;
+  /**
+   * URL path (e.g. "max-mustermann" for /team/max-mustermann).
+   */
+  slug: string;
+  /**
+   * Job title or role, e.g. "Lead Developer" or "CEO".
+   */
+  role: string;
+  /**
+   * Portrait photo. Recommended: square, min 400x400px.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * One-liner shown on the team overview card.
+   */
+  excerpt?: string | null;
+  /**
+   * Full biography shown on the detail page.
+   */
+  bio?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Contact email (optional).
+   */
+  email?: string | null;
+  /**
+   * Phone number (optional).
+   */
+  phone?: string | null;
+  /**
+   * Social media and website links.
+   */
+  socialLinks?:
+    | {
+        platform: 'linkedin' | 'xing' | 'twitter' | 'github' | 'instagram' | 'website';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Allows filtering by department.
+   */
+  department?: ('management' | 'development' | 'design' | 'marketing') | null;
+  /**
+   * Lower numbers appear first.
+   */
+  order?: number | null;
+  meta?: {
+    /**
+     * SEO title override.
+     */
+    title?: string | null;
+    /**
+     * SEO description (max 160 characters).
+     */
+    description?: string | null;
+    /**
+     * Open Graph image.
+     */
+    image?: (number | null) | Media;
+  };
+  /**
+   * Auto-set when status changes to published.
+   */
+  publishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Blog-Beiträge und Artikel. Schreiben Sie regelmäßig, um bei Suchmaschinen besser gefunden zu werden.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: number;
   title: string;
+  /**
+   * URL-Pfad des Beitrags (z.B. 'mein-erster-post' für /blog/mein-erster-post).
+   */
   slug: string;
+  /**
+   * Vorschaubild für den Beitrag. Wird in der Blog-Übersicht und beim Teilen angezeigt.
+   */
   heroImage?: (number | null) | Media;
   /**
-   * Short summary shown in post listings.
+   * Kurze Zusammenfassung für die Blog-Übersicht. 1-2 Sätze die neugierig machen.
    */
   excerpt?: string | null;
+  /**
+   * Der Hauptinhalt des Beitrags. Nutzen Sie Überschriften, Listen und Bilder für bessere Lesbarkeit.
+   */
   content: {
     root: {
       type: string;
@@ -387,13 +540,31 @@ export interface Post {
     };
     [k: string]: unknown;
   };
+  /**
+   * Kategorie für die Filterung und Organisation Ihrer Beiträge.
+   */
   category?: ('blog' | 'news' | 'case-study') | null;
+  /**
+   * Verfasser des Beitrags. Wählen Sie einen registrierten Benutzer aus.
+   */
   author?: (number | null) | User;
   meta?: {
+    /**
+     * SEO-Titel für Suchmaschinen. Leer = Beitragstitel wird verwendet.
+     */
     title?: string | null;
+    /**
+     * SEO-Beschreibung (max. 160 Zeichen).
+     */
     description?: string | null;
+    /**
+     * Social-Media-Vorschaubild (Open Graph).
+     */
     image?: (number | null) | Media;
   };
+  /**
+   * Veröffentlichungsdatum. Wird automatisch gesetzt bei Statuswechsel auf 'Published'.
+   */
   publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -438,6 +609,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'posts';
         value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'team-members';
+        value: number | TeamMember;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -668,6 +843,17 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        team?:
+          | T
+          | {
+              headline?: T;
+              subheadline?: T;
+              members?: T;
+              limit?: T;
+              showLink?: T;
+              id?: T;
+              blockName?: T;
+            };
       };
   content?: T;
   meta?:
@@ -694,6 +880,40 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   category?: T;
   author?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-members_select".
+ */
+export interface TeamMembersSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  role?: T;
+  photo?: T;
+  excerpt?: T;
+  bio?: T;
+  email?: T;
+  phone?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  department?: T;
+  order?: T;
   meta?:
     | T
     | {
@@ -747,36 +967,70 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * Bearbeiten Sie hier die Navigation Ihrer Website. Änderungen werden sofort auf allen Seiten sichtbar.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
  */
 export interface Header {
   id: number;
   logo?: (number | null) | Media;
+  /**
+   * Navigationslinks in der Kopfzeile. Maximal 8 Einträge. Reihenfolge per Drag & Drop ändern.
+   */
   navItems?:
     | {
+        /**
+         * Angezeigter Text des Links.
+         */
         label: string;
+        /**
+         * Ziel-URL (z.B. /leistungen oder https://example.com).
+         */
         url: string;
+        /**
+         * Link in neuem Tab öffnen (empfohlen für externe Links).
+         */
         openInNewTab?: boolean | null;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Optionaler hervorgehobener Button rechts in der Navigation.
+   */
   ctaButton?: {
+    /**
+     * Button ein- oder ausblenden.
+     */
     enabled?: boolean | null;
+    /**
+     * Button-Text (z.B. 'Kontakt' oder 'Angebot anfordern').
+     */
     label?: string | null;
+    /**
+     * Ziel-URL des Buttons.
+     */
     url?: string | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
+ * Fußzeile Ihrer Website. Organisieren Sie Links in Spalten und fügen Sie Social-Media-Profile hinzu.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "footer".
  */
 export interface Footer {
   id: number;
+  /**
+   * Link-Spalten im Footer. Maximal 4 Spalten mit je bis zu 6 Links.
+   */
   columns?:
     | {
+        /**
+         * Überschrift der Spalte (z.B. 'Unternehmen', 'Leistungen').
+         */
         heading: string;
         links?:
           | {
@@ -789,9 +1043,12 @@ export interface Footer {
       }[]
     | null;
   /**
-   * e.g. '2025 Your Company. All rights reserved.'
+   * Copyright-Text am unteren Rand (z.B. '© 2026 Meine Firma').
    */
   copyright?: string | null;
+  /**
+   * Social-Media-Profile. Werden als Icons im Footer angezeigt.
+   */
   socialLinks?:
     | {
         platform: 'linkedin' | 'twitter' | 'instagram' | 'github' | 'youtube';
@@ -803,31 +1060,39 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
+ * Globale Einstellungen für Ihre Website. Änderungen wirken sich auf die gesamte Seite aus.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
  */
 export interface SiteSetting {
   id: number;
   /**
-   * Visual theme for the website. Changes take effect immediately.
+   * Visuelles Theme der Website. Änderungen werden sofort auf allen Seiten sichtbar — kein erneutes Deployment nötig.
    */
   theme: 'minimal' | 'bold' | 'corporate';
+  /**
+   * Name Ihrer Website. Wird im Browser-Tab und in Suchmaschinen angezeigt.
+   */
   siteName: string;
   /**
-   * Default meta description for the site.
+   * Standard-Beschreibung für Suchmaschinen. Wird verwendet, wenn eine Seite keine eigene Beschreibung hat.
    */
   siteDescription?: string | null;
+  /**
+   * Kleines Icon im Browser-Tab. Empfohlen: 32x32 Pixel, PNG oder ICO.
+   */
   favicon?: (number | null) | Media;
   /**
-   * Default image used when sharing pages on social media.
+   * Standard-Bild beim Teilen auf Social Media. Empfohlen: 1200x630 Pixel.
    */
   ogImage?: (number | null) | Media;
   /**
-   * Third-party analytics integration.
+   * Drittanbieter-Analyse-Integration.
    */
   analytics?: {
     /**
-     * Google Analytics measurement ID (e.g. G-XXXXXXXXXX).
+     * Google Analytics Measurement ID (z.B. G-XXXXXXXXXX). Leer lassen, wenn Sie kein Google Analytics verwenden.
      */
     googleAnalyticsId?: string | null;
   };

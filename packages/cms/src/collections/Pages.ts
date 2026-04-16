@@ -8,6 +8,7 @@ import {
   CTABlock,
   RichTextBlock,
 } from "../blocks";
+import { TeamBlock } from "../templates/team/block";
 
 export const Pages: CollectionConfig = {
   slug: "pages",
@@ -64,6 +65,7 @@ export const Pages: CollectionConfig = {
         TestimonialsBlock,
         CTABlock,
         RichTextBlock,
+        TeamBlock,
       ],
       admin: {
         description:

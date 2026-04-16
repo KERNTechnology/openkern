@@ -1,6 +1,8 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 import type { ThemeComponents } from '@/themes/types'
+import { TeamGrid } from '@/templates/team/components/TeamGrid'
+import type { TeamMemberCardProps } from '@/templates/team/types'
 
 interface Block {
   blockType: string
@@ -119,6 +121,30 @@ export function BlockRenderer({ blocks, components }: Props) {
                 buttonUrl={(block.buttonUrl as string) || '/'}
               />
             )
+
+          case 'team': {
+            const TeamBlockComponent = components.TeamBlock ?? TeamGrid
+            const rawMembers = (block.members as Array<Record<string, unknown>>) || []
+            const teamMembers: TeamMemberCardProps[] = rawMembers
+              .filter((m) => m && typeof m === 'object' && 'name' in m)
+              .map((m) => ({
+                name: (m.name as string) || '',
+                role: (m.role as string) || '',
+                slug: (m.slug as string) || '',
+                excerpt: m.excerpt as string | undefined,
+                photo: resolveMedia(m.photo as { url?: string; alt?: string } | null),
+                socialLinks: m.socialLinks as { platform: string; url: string }[] | null,
+              }))
+            return (
+              <TeamBlockComponent
+                key={key}
+                headline={(block.headline as string) || ''}
+                subheadline={block.subheadline as string | undefined}
+                members={teamMembers}
+                showLink={block.showLink as boolean | undefined}
+              />
+            )
+          }
 
           case 'richtext':
             return (
