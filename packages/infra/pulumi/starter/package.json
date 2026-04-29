@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.ts",
   "dependencies": {
-    "@pulumi/aws": "^6.83.3",
+    "@pulumi/aws": "^7.27.0",
     "@pulumi/pulumi": "^3.232.0"
   },
   "devDependencies": {
