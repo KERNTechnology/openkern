@@ -5,7 +5,7 @@
   "main": "index.ts",
   "dependencies": {
     "@pulumi/aws": "^6.83.4",
-    "@pulumi/pulumi": "^3.246.0"
+    "@pulumi/pulumi": "^3.247.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
