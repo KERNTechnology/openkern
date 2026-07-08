@@ -26,7 +26,7 @@
     "@payloadcms/ui": "3.85.2",
     "cross-env": "^10.1.0",
     "graphql": "^16.14.2",
-    "next": "~16.2.9",
+    "next": "~16.2.10",
     "payload": "3.85.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -40,7 +40,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^16.2.9",
+    "eslint-config-next": "^16.2.10",
     "jsdom": "^29.1.1",
     "typescript": "^5.4.0",
     "vitest": "^4.1.10"
