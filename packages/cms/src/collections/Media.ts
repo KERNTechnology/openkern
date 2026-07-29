@@ -4,7 +4,14 @@ import { anyone, authenticated } from "../access";
 export const Media: CollectionConfig = {
   slug: "media",
   upload: {
-    mimeTypes: ["image/*", "application/pdf"],
+    mimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+      "application/pdf",
+    ],
     imageSizes: [
       { name: "thumbnail", width: 400, height: 300, position: "centre" },
       { name: "medium", width: 800, position: "centre" },
