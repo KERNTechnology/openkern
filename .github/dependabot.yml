@@ -14,6 +14,10 @@ updates:
       # until the Node baseline moves to 22+.
       - dependency-name: "jsdom"
         update-types: ["version-update:semver-major"]
+      # @types/node must match the deployed runtime (Lambda nodejs20.x).
+      # Bump deliberately when the Node baseline moves, not via Dependabot.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       payload:
         patterns:
@@ -39,6 +43,12 @@ updates:
     labels:
       - "dependencies"
       - "infrastructure"
+    ignore:
+      # Major provider upgrades change deployed customer infrastructure and
+      # need a verified test deployment first. Upgrade deliberately, not via
+      # Dependabot.
+      - dependency-name: "@pulumi/aws"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
