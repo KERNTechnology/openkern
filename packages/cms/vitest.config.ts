@@ -20,7 +20,7 @@ const config = defineConfig({
 
 // Vitest 4 / Vite 8 uses oxc for JSX transformation. Next.js tsconfig
 // sets jsx: "preserve" which oxc cannot parse. Override to "automatic".
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (config as any).oxc = { jsx: "automatic" };
 
 export default config;

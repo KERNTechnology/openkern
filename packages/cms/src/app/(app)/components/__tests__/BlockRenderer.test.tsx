@@ -25,7 +25,7 @@ function stubComponent(name: string) {
   return Component;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockComponents: ThemeComponents = {
   Header: stubComponent("Header") as any,
   Footer: stubComponent("Footer") as any,

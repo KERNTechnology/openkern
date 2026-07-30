@@ -51,7 +51,7 @@ function heading(tag: "h1" | "h2" | "h3" | "h4", text: string) {
 }
 
 /** Wrap children in a Lexical root structure. */
-// eslint-disable-next-line
+
 function lexicalRoot(children: Record<string, unknown>[]): any {
   return {
     root: {
