@@ -8,6 +8,12 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+    ignore:
+      # jsdom 30+ pulls an undici that needs Node 22+ (uses markAsUncloneable);
+      # this project runs on Node 20 (Lambda + CI). Hold jsdom on the 29.x line
+      # until the Node baseline moves to 22+.
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
     groups:
       payload:
         patterns:
