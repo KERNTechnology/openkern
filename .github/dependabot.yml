@@ -18,6 +18,10 @@ updates:
       # Bump deliberately when the Node baseline moves, not via Dependabot.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # Next.js 16.2 does not support the TypeScript 7 compiler API
+      # ("next build" fails). Revisit when Next.js supports TS 7 natively.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       payload:
         patterns:
