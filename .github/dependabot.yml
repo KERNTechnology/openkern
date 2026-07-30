@@ -22,6 +22,11 @@ updates:
       # ("next build" fails). Revisit when Next.js supports TS 7 natively.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # eslint-config-next bundles an eslint-plugin-react that crashes under
+      # eslint 10 (context.getFilename was removed). Revisit when
+      # eslint-config-next supports eslint 10.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     groups:
       payload:
         patterns:

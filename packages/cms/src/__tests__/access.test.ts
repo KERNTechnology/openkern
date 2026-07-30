@@ -106,7 +106,7 @@ describe("isAdmin", () => {
       // Double-cast through unknown: { req: { user: undefined } } doesn't
       // match the full PayloadRequest shape, so a direct as-cast is rejected.
       isAdmin(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         { req: { user: undefined } } as unknown as Parameters<typeof isAdmin>[0],
       ),
     ).toBe(false);
@@ -157,7 +157,7 @@ describe("Users bootstrap hook (first user becomes admin)", () => {
       req: { payload: { count: countMock } },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result = await bootstrapHook!(args as any);
 
     expect(countMock).toHaveBeenCalledWith(
@@ -174,7 +174,7 @@ describe("Users bootstrap hook (first user becomes admin)", () => {
       req: { payload: { count: countMock } },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result = await bootstrapHook!(args as any);
 
     expect(result).toMatchObject({ role: "editor" });
@@ -188,7 +188,7 @@ describe("Users bootstrap hook (first user becomes admin)", () => {
       req: { payload: { count: countMock } },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result = await bootstrapHook!(args as any);
 
     // count should not be called for update operations

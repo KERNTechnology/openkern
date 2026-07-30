@@ -56,7 +56,7 @@ export default async function HomePage() {
     )
   }
 
-  // eslint-disable-next-line
+
   const blocks = ((page as any).layout as Array<{ blockType: string; [k: string]: unknown }>) || []
 
   if (blocks.length > 0) {
