@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@aws-sdk/signature-v4-multi-region": "^3.996.46",
-    "@opennextjs/aws": "^4.1.0",
+    "@opennextjs/aws": "^4.1.2",
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/next": "3.88.0",
     "@payloadcms/plugin-seo": "3.88.0",
